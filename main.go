@@ -19,9 +19,9 @@ import (
 
 // variable assignment for configuration file and command line flags
 var configData config.ConfigData
-var argSha256 string
-var argQuery string
 var indent string
+var argPartIdentifier string
+var argExportPath string
 
 // initialize configuration file and flag values
 func init() {
@@ -43,11 +43,6 @@ func init() {
 	}
 	indent = indentString
 
-	//TODO: possibly remove any base level flags and require subcommand
-	// flag.StringVar(&argEndpoint, "endpoint", "https://aws-ip-services-tk-dev.wrs.com/api/graphql", "GraphQL Endpoint")
-	// flag.IntVar(&argLogLevel, "log", int(zerolog.InfoLevel), "Log Level Minimum")
-	flag.StringVar(&argSha256, "sha256", "", "SHA256 Part Query")
-	flag.StringVar(&argQuery, "query", "", "Graphql Query")
 }
 
 func main() {
@@ -62,8 +57,18 @@ func main() {
 	defer logFile.Close()
 	logger := zerolog.New(logFile)
 
-	//parse command line flag values
-	flag.Parse()
+	//subcommand flag sets
+	addSubcommand := flag.NewFlagSet("add", flag.ExitOnError)
+	addSubcommand.StringVar(&argPartIdentifier, "part", "", "Add part test flag")
+
+	exportSubcommand := flag.NewFlagSet("export", flag.ExitOnError)
+	exportSubcommand.StringVar(&argExportPath, "o", "", "output path for export subcommand")
+	exportSubcommand.StringVar(&argPartIdentifier, "part", "", "part id for export subcommand")
+
+	querySubcommand := flag.NewFlagSet("query", flag.ExitOnError)
+
+	findSubcommand := flag.NewFlagSet("find", flag.ExitOnError)
+	findSubcommand.StringVar(&argPartIdentifier, "part", "", "part id for find subcommand")
 
 	client := graphql.GetNewClient(configData.ServerAddr, http.DefaultClient)
 
@@ -71,19 +76,48 @@ func main() {
 	subcommand := os.Args[1]
 	switch subcommand {
 	case "export":
-		fmt.Println("Exporting")
+		if err := exportSubcommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("error exporting data")
+		}
+		if argPartIdentifier != "" && argExportPath != "" {
+			fmt.Printf("Now exporting part: %s to path:%s\n", argPartIdentifier, argExportPath)
+		}
+		if argPartIdentifier == "" {
+			fmt.Println("Part ID required to export data")
+		}
+		if argExportPath == "" {
+			fmt.Println("Path required to export data")
+		}
 	case "add":
-		fmt.Println("Adding")
-	default:
-		if argSha256 != "" {
-			partID, err := graphql.GetPartID(context.Background(), client, argSha256)
+		if err := addSubcommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("error adding part")
+		}
+		if argPartIdentifier != "" {
+			fmt.Printf("Now adding part: %s\n", argPartIdentifier)
+		}
+		if argPartIdentifier == "" {
+			fmt.Println("Part data required to add")
+		}
+	case "find":
+		if err := findSubcommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("error finding part")
+		}
+		if argPartIdentifier != "" {
+			partID, err := graphql.GetPartID(context.Background(), client, argPartIdentifier)
 			if err != nil {
-				fmt.Printf("Error retrieving part from SHA256: %s\n", argSha256)
+				fmt.Printf("Error retrieving part from SHA256: %s\n", argPartIdentifier)
 				logger.Fatal().Err(err).Msg("error retrieving part id")
 			}
 			fmt.Printf("Part ID: %s \n", partID.String())
 		}
-
+		if argPartIdentifier == "" {
+			fmt.Println("error finding part, find part usage: ccli find -part <SHA256>")
+		}
+	case "query":
+		if err := querySubcommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("error executing query, query subcommand usage: ccli query <GraphQL Query>")
+		}
+		argQuery := querySubcommand.Arg(0)
 		if argQuery != "" {
 			response, err := graphql.Query(context.Background(), client, argQuery)
 			if err != nil {
@@ -91,6 +125,7 @@ func main() {
 				logger.Fatal().Err(err).Msg("error querying graphql")
 			}
 
+			// json result will be output in prettified format
 			var data map[string]interface{}
 			json.Unmarshal(response, &data)
 
@@ -101,5 +136,11 @@ func main() {
 			}
 			fmt.Println(string(prettyJson))
 		}
+		if argQuery == "" {
+			fmt.Println("error executing query, query subcommand usage: ccli query <GraphQL Query>")
+		}
+
+	default:
+		fmt.Println(flag.ErrHelp)
 	}
 }
