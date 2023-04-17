@@ -7,6 +7,7 @@ require (
 	github.com/hasura/go-graphql-client v0.9.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
 
 require (

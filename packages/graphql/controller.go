@@ -1,4 +1,4 @@
-package graphqlController
+package graphql
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/hasura/go-graphql-client"
 )
 
+// retrieve part data from provided sha256 value
 func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uuid.UUID, error) {
 	var query struct {
 		Archive struct {
@@ -24,10 +25,12 @@ func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uui
 	return &query.Archive.PartID, nil
 }
 
+// allow user defined queries to be executed by ccli
 func Query(ctx context.Context, client *graphql.Client, query string) ([]byte, error) {
 	response, err := client.ExecRaw(ctx, query, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	return response, nil
 }
