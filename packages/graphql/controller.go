@@ -7,7 +7,7 @@ import (
 	"github.com/hasura/go-graphql-client"
 )
 
-func getPartID(ctx context.Context, client graphql.Client, sha256 string) (*uuid.UUID, error) {
+func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uuid.UUID, error) {
 	var query struct {
 		Archive struct {
 			PartID uuid.UUID `graphql:"part_id"`
@@ -22,4 +22,12 @@ func getPartID(ctx context.Context, client graphql.Client, sha256 string) (*uuid
 		return nil, err
 	}
 	return &query.Archive.PartID, nil
+}
+
+func Query(ctx context.Context, client *graphql.Client, query string) ([]byte, error) {
+	response, err := client.ExecRaw(ctx, query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }

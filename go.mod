@@ -1,4 +1,4 @@
-module wrs/catalog/cli
+module wrs/catalog/ccli
 
 go 1.19
 
