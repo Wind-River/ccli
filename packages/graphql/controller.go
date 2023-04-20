@@ -10,9 +10,7 @@ import (
 // retrieve part data from provided sha256 value
 func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uuid.UUID, error) {
 	var query struct {
-		Archive struct {
-			PartID uuid.UUID `graphql:"part_id"`
-		} `graphql:"archive(sha256: $sha256)"`
+		Archive `graphql:"archive(sha256: $sha256)"`
 	}
 
 	variables := map[string]interface{}{
