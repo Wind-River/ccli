@@ -2,10 +2,30 @@ package graphql
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/hasura/go-graphql-client"
 )
+
+func AddProfile(ctx context.Context, client *graphql.Client, id string, key string, document json.RawMessage) error {
+	var mutation struct {
+		AttachDocument struct {
+			Boolean graphql.Boolean
+		} `graphql:"attachDocument(id: $id, key: $key, document: $document)"`
+	}
+
+	variables := map[string]interface{}{
+		"id":       id,
+		"key":      key,
+		"document": document,
+	}
+
+	if err := client.Mutate(ctx, &mutation, variables); err != nil {
+		return err
+	}
+	return nil
+}
 
 // retrieve part data from provided sha256 value
 func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uuid.UUID, error) {
@@ -24,7 +44,7 @@ func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uui
 	return &query.PartID, nil
 }
 
-func GetPart(ctx context.Context, client *graphql.Client, id string) (*Part, error) {
+func GetPartByID(ctx context.Context, client *graphql.Client, id string) (*Part, error) {
 
 	var query struct {
 		Part `graphql:"part(id: $id)"`
@@ -39,6 +59,55 @@ func GetPart(ctx context.Context, client *graphql.Client, id string) (*Part, err
 	}
 	return &query.Part, nil
 }
+
+func GetPartByFVC(ctx context.Context, client *graphql.Client, fvc string) (*Part, error) {
+
+	var query struct {
+		Part `graphql:"part(file_verification_code: $fvc)"`
+	}
+
+	variables := map[string]interface{}{
+		"fvc": fvc,
+	}
+
+	if err := client.Query(ctx, &query, variables); err != nil {
+		return nil, err
+	}
+	return &query.Part, nil
+}
+
+func GetPartBySHA256(ctx context.Context, client *graphql.Client, sha256 string) (*Part, error) {
+
+	var query struct {
+		Part `graphql:"part(sha256: $sha256)"`
+	}
+
+	variables := map[string]interface{}{
+		"sha256": sha256,
+	}
+
+	if err := client.Query(ctx, &query, variables); err != nil {
+		return nil, err
+	}
+	return &query.Part, nil
+}
+
+// func Search(ctx context.Context, client *graphql.Client, searchQuery string) (*[]struct{}, error) {
+
+// 	var query struct {
+
+// 	}
+
+// 	variables := map[string]interface{}{
+// 		"searchQuery": searchQuery,
+// 		"method":      "fast",
+// 	}
+
+// 	if err := client.Query(ctx, &query, variables); err != nil {
+// 		return nil, err
+// 	}
+// 	return &query, nil
+// }
 
 // allow user defined queries to be executed by ccli
 func Query(ctx context.Context, client *graphql.Client, query string) ([]byte, error) {

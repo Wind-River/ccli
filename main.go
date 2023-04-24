@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	_ "embed"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -11,10 +10,11 @@ import (
 	"wrs/catalog/ccli/packages/config"
 	"wrs/catalog/ccli/packages/graphql"
 	"wrs/catalog/ccli/packages/http"
+	"wrs/catalog/ccli/packages/json"
+	"wrs/catalog/ccli/packages/yaml"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gopkg.in/yaml.v3"
 )
 
 // variable assignment for configuration file and command line flags
@@ -23,6 +23,9 @@ var indent string
 var argPartID string
 var argSHA256 string
 var argExportPath string
+var argImportPath string
+var argFVC string
+var argSearchQuery string
 
 var addSubcommand *flag.FlagSet
 var exportSubcommand *flag.FlagSet
@@ -84,16 +87,19 @@ func main() {
 
 	//subcommand flag sets
 	addSubcommand = flag.NewFlagSet("add", flag.ExitOnError)
-	addSubcommand.StringVar(&argPartID, "part", "", "add part test flag")
+	addSubcommand.StringVar(&argImportPath, "profile", "", "add profile import path")
 
 	exportSubcommand = flag.NewFlagSet("export", flag.ExitOnError)
 	exportSubcommand.StringVar(&argExportPath, "o", "", "output path for export subcommand")
 	exportSubcommand.StringVar(&argPartID, "id", "", "part id for export subcommand")
+	exportSubcommand.StringVar(&argSHA256, "sha256", "", "sha256 for export subcommand")
+	exportSubcommand.StringVar(&argFVC, "fvc", "", "file verification code for export subcommand")
 
 	querySubcommand = flag.NewFlagSet("query", flag.ExitOnError)
 
 	findSubcommand = flag.NewFlagSet("find", flag.ExitOnError)
 	findSubcommand.StringVar(&argSHA256, "sha256", "", "retrieve part id using sha256 for find subcommand")
+	findSubcommand.StringVar(&argSearchQuery, "part", "", "retrieve part data using search query")
 
 	if len(os.Args) < 2 {
 		printHelp()
@@ -107,58 +113,119 @@ func main() {
 	case "export":
 		if err := exportSubcommand.Parse(os.Args[2:]); err != nil {
 			fmt.Println("*** ERROR - Error exporting data")
-		}
-		if argExportPath[len(argExportPath)-5:] != ".yaml" && argExportPath[len(argExportPath)-4:] != ".yml" {
-			fmt.Println("*** ERROR - Export path must be a .yaml or .yml file")
-			break
-		}
-		if argPartID != "" && argExportPath != "" {
-			part, err := graphql.GetPart(context.Background(), client, argPartID)
-			if err != nil {
-				fmt.Println("*** ERROR - Error retrieving part")
-				logger.Fatal().Err(err).Msg("error retrieving part")
-			}
-
-			yamlPart, err := yaml.Marshal(part)
-			if err != nil {
-				fmt.Println("*** ERROR - Error marshalling part into yaml")
-				logger.Fatal().Err(err).Msg("error marshalling yaml")
-			}
-
-			yamlFile, err := os.Create(argExportPath)
-			if err != nil {
-				fmt.Println("*** ERROR - Error creating yaml file")
-				logger.Fatal().Err(err).Msg("error creating yaml file")
-			}
-			defer yamlFile.Close()
-
-			_, err = yamlFile.Write(yamlPart)
-			if err != nil {
-				fmt.Println("*** ERROR - Error writing yaml file")
-				logger.Fatal().Err(err).Msg("error writing part to yaml file")
-			}
-			fmt.Printf("Part successfully exported to path: %s\n", argExportPath)
-
-		}
-		if argPartID == "" {
-			fmt.Println("*** ERROR - Part ID required to export data")
+			logger.Fatal().Err(err).Msg("error parsing export subcommand flags")
 		}
 		if argExportPath == "" {
 			fmt.Println("*** ERROR - Path required to export data")
+			logger.Fatal().Msg("error exporting part, no path given")
 		}
+		if argExportPath[len(argExportPath)-5:] != ".yaml" && argExportPath[len(argExportPath)-4:] != ".yml" {
+			fmt.Println("*** ERROR - Export path must be a .yaml or .yml file")
+			logger.Fatal().Msg("error exporting part, export path not a yaml file")
+		}
+		if argPartID == "" && argFVC == "" && argSHA256 == "" {
+			fmt.Println("*** ERROR - Part ID required to export data")
+			logger.Fatal().Msg("error exporting part, no part identifier given")
+		}
+		var part *graphql.Part
+		if argPartID != "" {
+			part, err = graphql.GetPartByID(context.Background(), client, argPartID)
+			if err != nil {
+				fmt.Println("*** ERROR - Error retrieving part by catalog id, check logs for more info")
+				logger.Fatal().Err(err).Msg("error retrieving part")
+			}
+		}
+		if argSHA256 != "" {
+			part, err = graphql.GetPartBySHA256(context.Background(), client, argSHA256)
+			if err != nil {
+				fmt.Println("*** ERROR - Error retrieving part by sha256, check logs for more info")
+				logger.Fatal().Err(err).Msg("error retrieving part")
+			}
+		}
+		if argFVC != "" {
+			part, err = graphql.GetPartByFVC(context.Background(), client, argFVC)
+			if err != nil {
+				fmt.Println("*** ERROR - Error retrieving part by file verification code, check logs for more info")
+				logger.Fatal().Err(err).Msg("error retrieving part")
+			}
+		}
+		yamlPart, err := yaml.Marshal(part)
+		if err != nil {
+			fmt.Println("*** ERROR - Error marshalling part into yaml")
+			logger.Fatal().Err(err).Msg("error marshalling yaml")
+		}
+
+		yamlFile, err := os.Create(argExportPath)
+		if err != nil {
+			fmt.Println("*** ERROR - Error creating yaml file")
+			logger.Fatal().Err(err).Msg("error creating yaml file")
+		}
+		defer yamlFile.Close()
+
+		_, err = yamlFile.Write(yamlPart)
+		if err != nil {
+			fmt.Println("*** ERROR - Error writing yaml file")
+			logger.Fatal().Err(err).Msg("error writing part to yaml file")
+		}
+		fmt.Printf("Part successfully exported to path: %s\n", argExportPath)
+
 	case "add":
 		if err := addSubcommand.Parse(os.Args[2:]); err != nil {
 			fmt.Println("*** ERROR - Error adding part")
+			logger.Fatal().Err(err).Msg("error parsing add subcommand flags")
 		}
-		if argPartID != "" {
-			fmt.Printf("Now adding part: %s\n", argPartID)
+		if argImportPath == "" {
+			fmt.Println("*** ERROR - Profile data required to add a profile")
+			logger.Fatal().Msg("error adding profile, no import path given")
 		}
-		if argPartID == "" {
-			fmt.Println("*** ERROR - Part data required to add")
+		if argImportPath[len(argImportPath)-5:] != ".yaml" && argImportPath[len(argImportPath)-4:] != ".yml" {
+			fmt.Println("*** ERROR - Import path must be a .yaml or .yml file")
+			logger.Fatal().Msg("error importing profile, import path not a yaml file")
+		}
+		f, err := os.Open(argImportPath)
+		if err != nil {
+			fmt.Println("*** ERROR - Error opening profile file, check logs for more info")
+			logger.Fatal().Err(err).Msg("error opening file")
+		}
+		defer f.Close()
+		data, err := io.ReadAll(f)
+		if err != nil {
+			fmt.Println("*** ERROR - Error reading file")
+			logger.Fatal().Err(err).Msg("error reading file")
+		}
+		var profileData yaml.Profile
+		if err = yaml.Unmarshal(data, &profileData); err != nil {
+			fmt.Println("*** ERROR - Error decoding file contents")
+			logger.Fatal().Err(err).Msg("error decoding file contents")
+		}
+		switch profileData.Profile {
+		case "security":
+			var securityProfile yaml.SecurityProfile
+			if err = yaml.Unmarshal(data, &securityProfile); err != nil {
+				fmt.Println("*** ERROR - Error decoding security profile")
+				logger.Fatal().Err(err).Msg("error decoding security profile")
+			}
+			jsonSecurityProfile, err := json.Marshal(securityProfile)
+			if err != nil {
+				fmt.Println("*** ERROR - Error marshaling json")
+				logger.Fatal().Err(err).Msg("error marshaling json")
+			}
+			if profileData.CatalogID != "" {
+				if err = graphql.AddProfile(context.Background(), client, profileData.CatalogID, profileData.Profile, jsonSecurityProfile); err != nil {
+					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+					logger.Fatal().Err(err).Msg("error adding profile")
+				}
+			}
+			fmt.Printf("Successfully added security profile to %s-%s\n", profileData.Name, profileData.Version)
 		}
 	case "find":
 		if err := findSubcommand.Parse(os.Args[2:]); err != nil {
-			fmt.Println("*** ERROR - error finding part")
+			fmt.Println("*** ERROR - Error finding part")
+			logger.Fatal().Err(err).Msg("error parsing find subcommand flags")
+		}
+		if argSHA256 == "" && argSearchQuery == "" {
+			fmt.Println("*** ERROR - error finding part, find part usage: ccli find -part <SHA256>")
+			logger.Fatal().Msg("error finding part, no data provided")
 		}
 		if argSHA256 != "" {
 			partID, err := graphql.GetPartID(context.Background(), client, argSHA256)
@@ -168,18 +235,28 @@ func main() {
 			}
 			fmt.Printf("Part ID: %s \n", partID.String())
 		}
-		if argSHA256 == "" {
-			fmt.Println("*** ERROR - error finding part, find part usage: ccli find -part <SHA256>")
+		if argSearchQuery != "" {
+			// response, err := graphql.Search(context.Background(), client, argSearchQuery)
+			// if err != nil {
+			// 	fmt.Println("*** ERROR - Error searching for part")
+			// 	logger.Fatal().Err(err).Msg("error searching for part")
+			// }
+			fmt.Printf("Result: %s", argSearchQuery)
 		}
 	case "query":
 		if err := querySubcommand.Parse(os.Args[2:]); err != nil {
 			fmt.Println("*** ERROR - error executing query, query subcommand usage: ccli query <GraphQL Query>")
+			logger.Fatal().Err(err).Msg("error parsing query subcommand")
 		}
 		argQuery := querySubcommand.Arg(0)
+		if argQuery == "" {
+			fmt.Println("*** ERROR - error executing query, query subcommand usage: ccli query <GraphQL Query>")
+			logger.Fatal().Msg("error executing user query, no data provided")
+		}
 		if argQuery != "" {
 			response, err := graphql.Query(context.Background(), client, argQuery)
 			if err != nil {
-				fmt.Printf("***ERROR - Error executing query, more information available in logs.")
+				fmt.Printf("***ERROR - Error executing query, check logs for more info")
 				logger.Fatal().Err(err).Msg("error querying graphql")
 			}
 
@@ -189,15 +266,11 @@ func main() {
 
 			prettyJson, err := json.MarshalIndent(data, "", indent)
 			if err != nil {
-				fmt.Println("*** ERROR - error prettifying json response, more information available in logs.")
+				fmt.Println("*** ERROR - error prettifying json response, check logs for more info")
 				logger.Fatal().Err(err).Msg("error prettifying json")
 			}
 			fmt.Println(string(prettyJson))
 		}
-		if argQuery == "" {
-			fmt.Println("*** ERROR - error executing query, query subcommand usage: ccli query <GraphQL Query>")
-		}
-
 	default:
 		printHelp()
 	}
