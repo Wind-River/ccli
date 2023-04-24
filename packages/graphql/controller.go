@@ -92,22 +92,29 @@ func GetPartBySHA256(ctx context.Context, client *graphql.Client, sha256 string)
 	return &query.Part, nil
 }
 
-// func Search(ctx context.Context, client *graphql.Client, searchQuery string) (*[]struct{}, error) {
+func Search(ctx context.Context, client *graphql.Client, searchQuery string) (*[]Part, error) {
 
-// 	var query struct {
+	var query struct {
+		FindArchive []struct {
+			Archive `graphql:"archive"`
+		} `graphql:"find_archive(query: $searchQuery, method: $method)"`
+	}
 
-// 	}
+	variables := map[string]interface{}{
+		"searchQuery": searchQuery,
+		"method":      "fast",
+	}
 
-// 	variables := map[string]interface{}{
-// 		"searchQuery": searchQuery,
-// 		"method":      "fast",
-// 	}
+	if err := client.Query(ctx, &query, variables); err != nil {
+		return nil, err
+	}
 
-// 	if err := client.Query(ctx, &query, variables); err != nil {
-// 		return nil, err
-// 	}
-// 	return &query, nil
-// }
+	var parts []Part
+	for _, v := range query.FindArchive {
+		parts = append(parts, v.Part)
+	}
+	return &parts, nil
+}
 
 // allow user defined queries to be executed by ccli
 func Query(ctx context.Context, client *graphql.Client, query string) ([]byte, error) {

@@ -236,12 +236,18 @@ func main() {
 			fmt.Printf("Part ID: %s \n", partID.String())
 		}
 		if argSearchQuery != "" {
-			// response, err := graphql.Search(context.Background(), client, argSearchQuery)
-			// if err != nil {
-			// 	fmt.Println("*** ERROR - Error searching for part")
-			// 	logger.Fatal().Err(err).Msg("error searching for part")
-			// }
-			fmt.Printf("Result: %s", argSearchQuery)
+			response, err := graphql.Search(context.Background(), client, argSearchQuery)
+			if err != nil {
+				fmt.Println("*** ERROR - Error searching for part")
+				logger.Fatal().Err(err).Msg("error searching for part")
+			}
+
+			prettyJson, err := json.MarshalIndent(response, "", indent)
+			if err != nil {
+				fmt.Println("*** ERROR - Error prettifying json")
+				logger.Fatal().Err(err).Msg("error prettifying json")
+			}
+			fmt.Printf("Result: %s\n", string(prettyJson))
 		}
 	case "query":
 		if err := querySubcommand.Parse(os.Args[2:]); err != nil {
