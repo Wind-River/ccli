@@ -7,6 +7,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// Required to query graphql using custom scalar
+type UUID string
+
 type Archive struct {
 	Sha256     string    `graphql:"sha256"`
 	Size       int64     `graphql:"Size"`
@@ -19,20 +22,19 @@ type Archive struct {
 }
 
 type Part struct {
-	ID       uuid.UUID `graphql:"id"`
-	PartType string    `graphql:"type"`
-	Version  string    `graphql:"version"`
-	Name     string    `graphql:"name"`
-	//Label                string    `graphql:"label"`
-	FamilyName           string `graphql:"family_name"`
-	FileVerificationCode string `graphql:"file_verification_code"`
-	Size                 int64  `graphql:"size"`
-	License              string `graphql:"license"`
-	LicenseRationale     string `graphql:"license_rationale"`
-	//Description          string    `graphql:"description"`
-	Comprised string    `graphql:"comprised"`
-	Aliases   []string  `graphql:"aliases"`
-	Profiles  []Profile `graphql:"profiles"`
+	ID                   uuid.UUID `graphql:"id" yaml:"id"`
+	PartType             string    `graphql:"type" yaml:"type"`
+	Version              string    `graphql:"version" yaml:"version"`
+	Name                 string    `graphql:"name" yaml:"name"`
+	Label                string    `graphql:"label" yaml:"label"`
+	FamilyName           string    `graphql:"family_name" yaml:"family_name"`
+	FileVerificationCode string    `graphql:"file_verification_code" yaml:"file_verification_code"`
+	Size                 int64     `graphql:"size" yaml:"size"`
+	License              string    `graphql:"license" yaml:"license"`
+	LicenseRationale     string    `graphql:"license_rationale" yaml:"license_rationale"`
+	Description          string    `graphql:"description" yaml:"description"`
+	Comprised            uuid.UUID `graphql:"comprised" yaml:"comprised"`
+	Aliases              []string  `graphql:"aliases" yaml:"aliases"`
 }
 
 type Profile struct {

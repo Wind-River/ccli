@@ -88,7 +88,7 @@ func main() {
 
 	exportSubcommand = flag.NewFlagSet("export", flag.ExitOnError)
 	exportSubcommand.StringVar(&argExportPath, "o", "", "output path for export subcommand")
-	exportSubcommand.StringVar(&argPartID, "part", "", "part id for export subcommand")
+	exportSubcommand.StringVar(&argPartID, "id", "", "part id for export subcommand")
 
 	querySubcommand = flag.NewFlagSet("query", flag.ExitOnError)
 
@@ -108,11 +108,37 @@ func main() {
 		if err := exportSubcommand.Parse(os.Args[2:]); err != nil {
 			fmt.Println("*** ERROR - Error exporting data")
 		}
-		if argExportPath[:4] != ".yaml" {
-			fmt.Println("*** ERROR - Export path must be a .yaml file")
+		if argExportPath[len(argExportPath)-5:] != ".yaml" && argExportPath[len(argExportPath)-4:] != ".yml" {
+			fmt.Println("*** ERROR - Export path must be a .yaml or .yml file")
+			break
 		}
 		if argPartID != "" && argExportPath != "" {
-			fmt.Printf("Now exporting part: %s to path:%s\n", argPartID, argExportPath)
+			part, err := graphql.GetPart(context.Background(), client, argPartID)
+			if err != nil {
+				fmt.Println("*** ERROR - Error retrieving part")
+				logger.Fatal().Err(err).Msg("error retrieving part")
+			}
+
+			yamlPart, err := yaml.Marshal(part)
+			if err != nil {
+				fmt.Println("*** ERROR - Error marshalling part into yaml")
+				logger.Fatal().Err(err).Msg("error marshalling yaml")
+			}
+
+			yamlFile, err := os.Create(argExportPath)
+			if err != nil {
+				fmt.Println("*** ERROR - Error creating yaml file")
+				logger.Fatal().Err(err).Msg("error creating yaml file")
+			}
+			defer yamlFile.Close()
+
+			_, err = yamlFile.Write(yamlPart)
+			if err != nil {
+				fmt.Println("*** ERROR - Error writing yaml file")
+				logger.Fatal().Err(err).Msg("error writing part to yaml file")
+			}
+			fmt.Printf("Part successfully exported to path: %s\n", argExportPath)
+
 		}
 		if argPartID == "" {
 			fmt.Println("*** ERROR - Part ID required to export data")

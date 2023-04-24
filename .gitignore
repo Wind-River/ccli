@@ -1,3 +1,5 @@
 ccli
-__ccli_config.yml
+*.yml
+*.yaml
 log.txt
+!ccli_config.DEFAULT.yml

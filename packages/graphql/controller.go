@@ -17,10 +17,27 @@ func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uui
 		"sha256": sha256,
 	}
 
-	if err := client.Query(context.Background(), &query, variables); err != nil {
+	if err := client.Query(ctx, &query, variables); err != nil {
 		return nil, err
 	}
-	return &query.Archive.PartID, nil
+
+	return &query.PartID, nil
+}
+
+func GetPart(ctx context.Context, client *graphql.Client, id string) (*Part, error) {
+
+	var query struct {
+		Part `graphql:"part(id: $id)"`
+	}
+
+	variables := map[string]interface{}{
+		"id": UUID(id),
+	}
+
+	if err := client.Query(ctx, &query, variables); err != nil {
+		return nil, err
+	}
+	return &query.Part, nil
 }
 
 // allow user defined queries to be executed by ccli
