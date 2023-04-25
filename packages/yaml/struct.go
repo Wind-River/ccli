@@ -16,8 +16,35 @@ type SecurityProfile struct {
 		Description string   `yaml:"description"`
 		Status      string   `yaml:"status"`
 		Date        string   `yaml:"date"`
-		Comments    string   `yaml:"comments,omitempty"`
+		Comments    string   `yaml:"comments"`
 		Link        string   `yaml:"link"`
 		References  []string `yaml:"references"`
 	} `yaml:"cve_list"`
+}
+
+type QualityProfile struct {
+	BugList []struct {
+		Name        string   `yaml:"name"`
+		ID          string   `yaml:"id"`
+		Description string   `yaml:"description"`
+		Status      string   `yaml:"status"`
+		Level       string   `yaml:"level"`
+		Date        string   `yaml:"date"`
+		Link        string   `yaml:"link"`
+		Comments    string   `yaml:"comments"`
+		References  []string `yaml:"references"`
+	} `yaml:"bug_list"`
+}
+
+type LicensingProfile struct {
+	LicenseAnalysis []License `yaml:"license_analysis"`
+	Copyrights      []string  `yaml:"copyrights"`
+	LegalNotice     string    `yaml:"legal_notice"`
+}
+
+type License struct {
+	LicenseExpression string   `yaml:"license_expression"`
+	AnalysisType      string   `yaml:"analysis_type"`
+	LegalNotice       string   `yaml:"legal_notice"`
+	OtherLegalNotices []string `yaml:"other_legal_notices"`
 }

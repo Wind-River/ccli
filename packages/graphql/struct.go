@@ -9,6 +9,7 @@ import (
 
 // Required to query graphql using custom scalar
 type UUID string
+type JSON string
 
 type Archive struct {
 	Sha256     string    `graphql:"sha256"`

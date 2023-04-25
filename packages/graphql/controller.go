@@ -10,15 +10,13 @@ import (
 
 func AddProfile(ctx context.Context, client *graphql.Client, id string, key string, document json.RawMessage) error {
 	var mutation struct {
-		AttachDocument struct {
-			Boolean graphql.Boolean
-		} `graphql:"attachDocument(id: $id, key: $key, document: $document)"`
+		AttachDocument bool `graphql:"attachDocument(id: $id, key: $key, document: $document)"`
 	}
 
 	variables := map[string]interface{}{
-		"id":       id,
+		"id":       UUID(id),
 		"key":      key,
-		"document": document,
+		"document": JSON(document),
 	}
 
 	if err := client.Mutate(ctx, &mutation, variables); err != nil {
@@ -28,7 +26,7 @@ func AddProfile(ctx context.Context, client *graphql.Client, id string, key stri
 }
 
 // retrieve part data from provided sha256 value
-func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uuid.UUID, error) {
+func GetPartIDBySha256(ctx context.Context, client *graphql.Client, sha256 string) (*uuid.UUID, error) {
 	var query struct {
 		Archive `graphql:"archive(sha256: $sha256)"`
 	}
@@ -42,6 +40,23 @@ func GetPartID(ctx context.Context, client *graphql.Client, sha256 string) (*uui
 	}
 
 	return &query.PartID, nil
+}
+
+// retrieve part data from provided file verification code value
+func GetPartIDByFVC(ctx context.Context, client *graphql.Client, fvc string) (*uuid.UUID, error) {
+	var query struct {
+		Part `graphql:"part(file_verification_code: $fvc)"`
+	}
+
+	variables := map[string]interface{}{
+		"fvc": fvc,
+	}
+
+	if err := client.Query(ctx, &query, variables); err != nil {
+		return nil, err
+	}
+
+	return &query.Part.ID, nil
 }
 
 func GetPartByID(ctx context.Context, client *graphql.Client, id string) (*Part, error) {
