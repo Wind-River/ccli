@@ -194,7 +194,7 @@ func main() {
 			logger.Fatal().Err(err).Msg("error parsing add subcommand flags")
 		}
 		if argImportPath == "" {
-			fmt.Println("*** ERROR - Profile data required to add a profile")
+			fmt.Println("*** ERROR - Profile data required to add a profile, usage: ./ccli add -profile <Path>")
 			logger.Fatal().Msg("error adding profile, no import path given")
 		}
 		if argImportPath[len(argImportPath)-5:] != ".yaml" && argImportPath[len(argImportPath)-4:] != ".yml" {
@@ -445,7 +445,7 @@ func main() {
 				logger.Fatal().Err(err).Msg("error uploading archive")
 			}
 			if response.StatusCode == 200 {
-				fmt.Printf("Successfully uploaded %s\n", argPath)
+				fmt.Printf("Successfully uploaded package: %s\n", argPath)
 			}
 		}
 	case "update":
