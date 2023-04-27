@@ -72,6 +72,10 @@ func printHelp() {
 	fmt.Println("\tUsed to input custom GraphQL query - ccli query <Graphql Query>")
 	fmt.Println("find")
 	findSubcommand.PrintDefaults()
+	fmt.Println("upload")
+	fmt.Println("\tUsed to upload packages - ccli upload <Path>")
+	fmt.Println("update")
+	fmt.Println("\tUsed to update part data - ccli update <Path>")
 	os.Exit(1)
 }
 
