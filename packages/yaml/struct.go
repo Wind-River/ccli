@@ -1,5 +1,24 @@
 package yaml
 
+type Part struct {
+	Format      float64 `yaml:"format"`
+	FVC         string  `yaml:"fvc"`
+	Sha256      string  `yaml:"sha256"`
+	CatalogID   string  `yaml:"catalog_id"`
+	Name        string  `yaml:"name"`
+	Version     string  `yaml:"version"`
+	Label       string  `yaml:"label"`
+	Description string  `yaml:"description"`
+	License     struct {
+		LicenseExpression string `yaml:"license_expression"`
+		AnalysisType      string `yaml:"analysis_type"`
+	} `yaml:"license"`
+	Size          string   `yaml:"size"`
+	Aliases       []string `yaml:"aliases"`
+	ComprisedOf   string   `yaml:"comprised_of"`
+	CompositeList []string `yaml:"composite_list"`
+}
+
 type Profile struct {
 	Profile   string  `yaml:"profile"`
 	Format    float64 `yaml:"format"`

@@ -3,6 +3,7 @@ package graphql
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/google/uuid"
 )
@@ -10,6 +11,7 @@ import (
 // Required to query graphql using custom scalar
 type UUID string
 type JSON string
+type Upload os.File
 
 type Archive struct {
 	Sha256     string    `graphql:"sha256"`
@@ -36,6 +38,20 @@ type Part struct {
 	Description          string    `graphql:"description" yaml:"description"`
 	Comprised            uuid.UUID `graphql:"comprised" yaml:"comprised"`
 	Aliases              []string  `graphql:"aliases" yaml:"aliases"`
+}
+
+type PartInput struct {
+	ID                   *UUID  `graphql:"id" json:"id"`
+	Type                 string `graphql:"type" json:"type"`
+	Name                 string `graphql:"name" json:"name"`
+	Version              string `graphql:"version" json:"version"`
+	Label                string `graphql:"label" json:"label"`
+	FamilyName           string `graphql:"family_name" json:"family_name"`
+	FileVerificationCode string `graphql:"file_verification_code" json:"file_verification_code"`
+	License              string `graphql:"license" json:"license"`
+	LicenseRationale     string `graphql:"license_rationale" json:"license_rationale"`
+	Description          string `graphql:"description" json:"description"`
+	Comprised            *UUID  `graphql:"comprised" json:"comprised"`
 }
 
 type Profile struct {

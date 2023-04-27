@@ -31,6 +31,8 @@ var addSubcommand *flag.FlagSet
 var exportSubcommand *flag.FlagSet
 var querySubcommand *flag.FlagSet
 var findSubcommand *flag.FlagSet
+var uploadSubcommand *flag.FlagSet
+var updateSubcommand *flag.FlagSet
 
 // initialize configuration file and flag values
 func init() {
@@ -102,6 +104,11 @@ func main() {
 	findSubcommand.StringVar(&argSearchQuery, "part", "", "retrieve part data using search query")
 	findSubcommand.StringVar(&argFVC, "fvc", "", "retrieve part id using file verification code")
 
+	updateSubcommand = flag.NewFlagSet("update", flag.ExitOnError)
+	updateSubcommand.StringVar(&argImportPath, "part", "", "update part import path")
+
+	uploadSubcommand = flag.NewFlagSet("upload", flag.ExitOnError)
+
 	if len(os.Args) < 2 {
 		printHelp()
 	}
@@ -125,7 +132,7 @@ func main() {
 			logger.Fatal().Msg("error exporting part, export path not a yaml file")
 		}
 		if argPartID == "" && argFVC == "" && argSHA256 == "" {
-			fmt.Println("*** ERROR - Part ID required to export data")
+			fmt.Println("*** ERROR - Part identifier required to export data")
 			logger.Fatal().Msg("error exporting part, no part identifier given")
 		}
 		var part *graphql.Part
@@ -150,7 +157,14 @@ func main() {
 				logger.Fatal().Err(err).Msg("error retrieving part")
 			}
 		}
-		yamlPart, err := yaml.Marshal(part)
+
+		var yamlPart yaml.Part
+		if err := graphql.UnmarshalPart(part, &yamlPart); err != nil {
+			fmt.Println("*** ERROR parsing part into yaml")
+			logger.Fatal().Err(err).Msg("error parsing part into yaml")
+		}
+
+		ret, err := yaml.Marshal(yamlPart)
 		if err != nil {
 			fmt.Println("*** ERROR - Error marshalling part into yaml")
 			logger.Fatal().Err(err).Msg("error marshalling yaml")
@@ -163,7 +177,7 @@ func main() {
 		}
 		defer yamlFile.Close()
 
-		_, err = yamlFile.Write(yamlPart)
+		_, err = yamlFile.Write(ret)
 		if err != nil {
 			fmt.Println("*** ERROR - Error writing yaml file")
 			logger.Fatal().Err(err).Msg("error writing part to yaml file")
@@ -172,7 +186,7 @@ func main() {
 
 	case "add":
 		if err := addSubcommand.Parse(os.Args[2:]); err != nil {
-			fmt.Println("*** ERROR - Error adding part")
+			fmt.Println("*** ERROR - Error adding profile")
 			logger.Fatal().Err(err).Msg("error parsing add subcommand flags")
 		}
 		if argImportPath == "" {
@@ -348,7 +362,8 @@ func main() {
 			logger.Fatal().Err(err).Msg("error parsing find subcommand flags")
 		}
 		if argSHA256 == "" && argSearchQuery == "" && argFVC == "" {
-			fmt.Println("*** ERROR - error finding part, find part usage: ccli find -part <SHA256>")
+			fmt.Println("*** ERROR - error finding part, find part usage:")
+			findSubcommand.PrintDefaults()
 			logger.Fatal().Msg("error finding part, no data provided")
 		}
 		if argSHA256 != "" {
@@ -408,6 +423,68 @@ func main() {
 				logger.Fatal().Err(err).Msg("error prettifying json")
 			}
 			fmt.Println(string(prettyJson))
+		}
+	case "upload":
+		if err := uploadSubcommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("*** ERROR - Error executing upload, upload subcommand usage: ccli upload <Path>")
+			logger.Fatal().Err(err).Msg("error parsing upload subcommand")
+		}
+		argPath := uploadSubcommand.Arg(0)
+		if argPath == "" {
+			fmt.Println("*** ERROR - Error executing upload, upload subcommand usage: ccli upload <Path>")
+			logger.Fatal().Msg("error executing upload, no path given")
+		}
+		if argPath != "" {
+			response, err := graphql.UploadFile(http.DefaultClient, configData.ServerAddr, argPath, "")
+			if err != nil {
+				fmt.Println("*** ERROR - Error executing upload, check logs for more info")
+				logger.Fatal().Err(err).Msg("error uploading archive")
+			}
+			if response.StatusCode == 200 {
+				fmt.Printf("Successfully uploaded %s\n", argPath)
+			}
+		}
+	case "update":
+		if err := updateSubcommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("*** ERROR - Error updating part, update subcommand usage: ./ccli update -part <Path>")
+			logger.Fatal().Err(err).Msg("error updating part")
+		}
+		if argImportPath == "" {
+			fmt.Println("*** ERROR - Error updating part, update subcommand usage: ./ccli update -part <Path>")
+			logger.Fatal().Msg("error updating part, no file given")
+		}
+		if argImportPath != "" {
+			if argImportPath[len(argImportPath)-5:] != ".yaml" && argImportPath[len(argImportPath)-4:] != ".yml" {
+				fmt.Println("*** ERROR - Import path must be a .yaml or .yml file")
+				logger.Fatal().Msg("error importing part, import path not a yaml file")
+			}
+			f, err := os.Open(argImportPath)
+			if err != nil {
+				fmt.Println("*** ERROR - Error opening part file, check logs for more info")
+				logger.Fatal().Err(err).Msg("error opening file")
+			}
+			defer f.Close()
+			data, err := io.ReadAll(f)
+			if err != nil {
+				fmt.Println("*** ERROR - Error reading file")
+				logger.Fatal().Err(err).Msg("error reading file")
+			}
+			var partData yaml.Part
+			if err = yaml.Unmarshal(data, &partData); err != nil {
+				fmt.Println("*** ERROR - Error decoding file contents")
+				logger.Fatal().Err(err).Msg("error decoding file contents")
+			}
+			returnPart, err := graphql.UpdatePart(context.Background(), client, &partData)
+			if err != nil {
+				fmt.Println("*** ERROR - Error updating part, check logs for more info")
+				logger.Fatal().Err(err).Msg("error updating part")
+			}
+			prettyJson, err := json.MarshalIndent(&returnPart, "", indent)
+			if err != nil {
+				fmt.Println("*** ERROR - Error prettifying returned part")
+				logger.Fatal().Err(err).Msg("error prettifying json")
+			}
+			fmt.Printf("Part successfully updated\n%s\n", string(prettyJson))
 		}
 	default:
 		printHelp()
