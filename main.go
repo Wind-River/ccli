@@ -26,6 +26,7 @@ var argExportPath string
 var argImportPath string
 var argFVC string
 var argSearchQuery string
+var argTemplate string
 
 var addSubcommand *flag.FlagSet
 var exportSubcommand *flag.FlagSet
@@ -100,6 +101,7 @@ func main() {
 	exportSubcommand.StringVar(&argPartID, "id", "", "part id for export subcommand")
 	exportSubcommand.StringVar(&argSHA256, "sha256", "", "sha256 for export subcommand")
 	exportSubcommand.StringVar(&argFVC, "fvc", "", "file verification code for export subcommand")
+	exportSubcommand.StringVar(&argTemplate, "template", "", "used to export profile/part template to output: ./ccli export -template <Type>")
 
 	querySubcommand = flag.NewFlagSet("query", flag.ExitOnError)
 
@@ -135,9 +137,136 @@ func main() {
 			fmt.Println("*** ERROR - Export path must be a .yaml or .yml file")
 			logger.Fatal().Msg("error exporting part, export path not a yaml file")
 		}
-		if argPartID == "" && argFVC == "" && argSHA256 == "" {
+		if argPartID == "" && argFVC == "" && argSHA256 == "" && argTemplate == "" {
 			fmt.Println("*** ERROR - Part identifier required to export data")
 			logger.Fatal().Msg("error exporting part, no part identifier given")
+		}
+		if argTemplate != "" {
+			switch argTemplate {
+			case "part":
+				yamlPart := new(yaml.Part)
+				yamlPart.Format = 1.0
+				f, err := os.Create(argExportPath)
+				if err != nil {
+					fmt.Println("*** ERROR - Error creating template file")
+					logger.Fatal().Err(err).Msg("error creating template file")
+				}
+				defer f.Close()
+				yamlPartTemplate, err := yaml.Marshal(&yamlPart)
+				if err != nil {
+					fmt.Println("*** ERROR - Error marshaling part template")
+					logger.Fatal().Err(err).Msg("error marshaling part template")
+				}
+				_, err = f.Write(yamlPartTemplate)
+				if err != nil {
+					fmt.Println("*** ERROR - Error writing template to file")
+					logger.Fatal().Err(err).Msg("error writing template to file")
+				}
+				fmt.Printf("Part template successfully output to: %s\n", argExportPath)
+				os.Exit(0)
+			case "security":
+				yamlProfile := new(yaml.Profile)
+				yamlSecurityProfile := new(yaml.SecurityProfile)
+				yamlCVE := new(yaml.CVE)
+				yamlProfile.Format = 1.0
+				yamlSecurityProfile.CVEList = append(yamlSecurityProfile.CVEList, *yamlCVE)
+				f, err := os.Create(argExportPath)
+				if err != nil {
+					fmt.Println("*** ERROR - Error creating template file")
+					logger.Fatal().Err(err).Msg("error creating template file")
+				}
+				defer f.Close()
+				yamlProfileTemplate, err := yaml.Marshal(&yamlProfile)
+				if err != nil {
+					fmt.Println("*** ERROR - Error marshaling profile template")
+					logger.Fatal().Err(err).Msg("error marshaling profile template")
+				}
+				yamlSecurityProfileTemplate, err := yaml.Marshal(&yamlSecurityProfile)
+				if err != nil {
+					fmt.Println("*** ERROR - Error marshaling security profile template")
+					logger.Fatal().Err(err).Msg("error marshaling security profile template")
+				}
+				_, err = f.Write(yamlProfileTemplate)
+				if err != nil {
+					fmt.Println("*** ERROR - Error writing template to file")
+					logger.Fatal().Err(err).Msg("error writing template to file")
+				}
+				_, err = f.Write(yamlSecurityProfileTemplate)
+				if err != nil {
+					fmt.Println("*** ERROR - Error writing template to file")
+					logger.Fatal().Err(err).Msg("error writing template to file")
+				}
+				fmt.Printf("Profile template successfully output to: %s\n", argExportPath)
+				os.Exit(0)
+			case "quality":
+				yamlProfile := new(yaml.Profile)
+				yamlQualityProfile := new(yaml.QualityProfile)
+				yamlBug := new(yaml.Bug)
+				yamlProfile.Format = 1.0
+				yamlQualityProfile.BugList = append(yamlQualityProfile.BugList, *yamlBug)
+				f, err := os.Create(argExportPath)
+				if err != nil {
+					fmt.Println("*** ERROR - Error creating template file")
+					logger.Fatal().Err(err).Msg("error creating template file")
+				}
+				defer f.Close()
+				yamlProfileTemplate, err := yaml.Marshal(&yamlProfile)
+				if err != nil {
+					fmt.Println("*** ERROR - Error marshaling profile template")
+					logger.Fatal().Err(err).Msg("error marshaling profile template")
+				}
+				yamlQualityProfileTemplate, err := yaml.Marshal(&yamlQualityProfile)
+				if err != nil {
+					fmt.Println("*** ERROR - Error marshaling quality profile template")
+					logger.Fatal().Err(err).Msg("error marshaling quality profile template")
+				}
+				_, err = f.Write(yamlProfileTemplate)
+				if err != nil {
+					fmt.Println("*** ERROR - Error writing template to file")
+					logger.Fatal().Err(err).Msg("error writing template to file")
+				}
+				_, err = f.Write(yamlQualityProfileTemplate)
+				if err != nil {
+					fmt.Println("*** ERROR - Error writing template to file")
+					logger.Fatal().Err(err).Msg("error writing template to file")
+				}
+				fmt.Printf("Profile template successfully output to: %s\n", argExportPath)
+				os.Exit(0)
+			case "licensing":
+				yamlProfile := new(yaml.Profile)
+				yamlLicensingProfile := new(yaml.LicensingProfile)
+				yamlLicense := new(yaml.License)
+				yamlProfile.Format = 1.0
+				yamlLicensingProfile.LicenseAnalysis = append(yamlLicensingProfile.LicenseAnalysis, *yamlLicense)
+				f, err := os.Create(argExportPath)
+				if err != nil {
+					fmt.Println("*** ERROR - Error creating template file")
+					logger.Fatal().Err(err).Msg("error creating template file")
+				}
+				defer f.Close()
+				yamlProfileTemplate, err := yaml.Marshal(&yamlProfile)
+				if err != nil {
+					fmt.Println("*** ERROR - Error marshaling profile template")
+					logger.Fatal().Err(err).Msg("error marshaling profile template")
+				}
+				yamlLicensingProfileTemplate, err := yaml.Marshal(&yamlLicensingProfile)
+				if err != nil {
+					fmt.Println("*** ERROR - Error marshaling licensing profile template")
+					logger.Fatal().Err(err).Msg("error marshaling licensing profile template")
+				}
+				_, err = f.Write(yamlProfileTemplate)
+				if err != nil {
+					fmt.Println("*** ERROR - Error writing template to file")
+					logger.Fatal().Err(err).Msg("error writing template to file")
+				}
+				_, err = f.Write(yamlLicensingProfileTemplate)
+				if err != nil {
+					fmt.Println("*** ERROR - Error writing template to file")
+					logger.Fatal().Err(err).Msg("error writing template to file")
+				}
+				fmt.Printf("Profile template successfully output to: %s\n", argExportPath)
+				os.Exit(0)
+			}
 		}
 		var part *graphql.Part
 		if argPartID != "" {
@@ -161,7 +290,6 @@ func main() {
 				logger.Fatal().Err(err).Msg("error retrieving part")
 			}
 		}
-
 		var yamlPart yaml.Part
 		if err := graphql.UnmarshalPart(part, &yamlPart); err != nil {
 			fmt.Println("*** ERROR parsing part into yaml")
