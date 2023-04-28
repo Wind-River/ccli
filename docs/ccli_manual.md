@@ -20,7 +20,13 @@ $ ccli query '...'
 --fvc <file_verification_code>| --sha256 \<Sha256>| --id <catalog_id> -o <file.yml>
 Export out data for a given part. 
 ```
-  $ ccli export --id <catalog_id> -o <file.yml>
+  $ ccli export --id sdl3ga-naTs42g5-rbow2A -o file.yml
+```
+- **export** 
+--template <part | security | quality | licensing> -o <Path.yaml>
+Export template for part or profile
+```
+ccli export --template security -o file.yml
 ```
 - **update** --part <file.yml> - enables one to update selective data fields of a part record. See the 'update' section below for the format the 
 required yml file. For example:
