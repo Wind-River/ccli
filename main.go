@@ -83,6 +83,21 @@ func printHelp() {
 }
 
 func main() {
+	if configData.ServerAddr == "" {
+		fmt.Println("*** ERROR - Invalid configuration file, no server address located")
+		log.Fatal().Msg("error reading server address")
+	}
+	resp, err := http.DefaultClient.Get(configData.ServerAddr)
+	if err != nil {
+		fmt.Println("*** ERROR - Error contacting server")
+		log.Fatal().Err(err).Msg("error contacting server")
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 200 && resp.StatusCode != 422 {
+		fmt.Println("*** ERROR - Server unreachable, check config file and network configuration")
+		log.Fatal().Msgf("error reaching server, status code: %d", resp.StatusCode)
+	}
+
 	// set global log level to value found in configuration file
 	zerolog.SetGlobalLevel(zerolog.Level(configData.LogLevel))
 
@@ -693,6 +708,23 @@ func main() {
 				logger.Fatal().Err(err).Msg("error prettifying json")
 			}
 			fmt.Printf("Part successfully updated\n%s\n", string(prettyJson))
+		}
+	case "ping":
+		if configData.ServerAddr == "" {
+			fmt.Println("*** ERROR - Invalid configuration file, no server address located")
+			log.Fatal().Msg("error reading server address")
+		}
+		resp, err := http.DefaultClient.Get(configData.ServerAddr)
+		if err != nil {
+			fmt.Println("*** ERROR - Error contacting server")
+			log.Fatal().Err(err).Msg("error contacting server")
+		}
+		resp.Body.Close()
+		if resp.StatusCode != 200 && resp.StatusCode != 422 {
+			fmt.Println("*** ERROR - Server unreachable, check config file and network configuration")
+			log.Fatal().Msgf("error reaching server, status code: %d", resp.StatusCode)
+		} else {
+			fmt.Println("Ping Result: Success")
 		}
 	default:
 		printHelp()
