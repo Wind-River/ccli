@@ -46,5 +46,10 @@ $ ccli upload openssl-1.1.1n.tar.gz
 $ ccli find -part busybox
 $ ccli find -sha256 <sha256>
 ```
+- **find**
+--profile <security|quality|licensing> -id <catalog_id> - retrieves a profile from the catalog based on type and part id.
+```
+ccli find -profile security -id werS12-da54FaSff-9U2aef
+```
 
 

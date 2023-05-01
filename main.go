@@ -24,9 +24,11 @@ var argPartID string
 var argSHA256 string
 var argExportPath string
 var argImportPath string
+var argPartImportPath string
 var argFVC string
 var argSearchQuery string
 var argTemplate string
+var argProfileType string
 
 var addSubcommand *flag.FlagSet
 var exportSubcommand *flag.FlagSet
@@ -84,6 +86,9 @@ func main() {
 	// set global log level to value found in configuration file
 	zerolog.SetGlobalLevel(zerolog.Level(configData.LogLevel))
 
+	if configData.LogFile == "" || configData.LogFile[len(configData.LogFile)-4:] != ".txt" {
+		log.Fatal().Msg("*** ERROR - Error reading config file, log file must be a .txt file")
+	}
 	// open log file and set logging output
 	logFile, err := os.Create(configData.LogFile)
 	if err != nil {
@@ -95,6 +100,7 @@ func main() {
 	//subcommand flag sets
 	addSubcommand = flag.NewFlagSet("add", flag.ExitOnError)
 	addSubcommand.StringVar(&argImportPath, "profile", "", "add profile import path")
+	addSubcommand.StringVar(&argPartImportPath, "part", "", "add part import path")
 
 	exportSubcommand = flag.NewFlagSet("export", flag.ExitOnError)
 	exportSubcommand.StringVar(&argExportPath, "o", "", "output path for export subcommand")
@@ -106,9 +112,11 @@ func main() {
 	querySubcommand = flag.NewFlagSet("query", flag.ExitOnError)
 
 	findSubcommand = flag.NewFlagSet("find", flag.ExitOnError)
+	findSubcommand.StringVar(&argProfileType, "profile", "", "retrieve profile using key")
 	findSubcommand.StringVar(&argSHA256, "sha256", "", "retrieve part id using sha256")
 	findSubcommand.StringVar(&argSearchQuery, "part", "", "retrieve part data using search query")
 	findSubcommand.StringVar(&argFVC, "fvc", "", "retrieve part id using file verification code")
+	findSubcommand.StringVar(&argPartID, "id", "", "retrieve part data using part id")
 
 	updateSubcommand = flag.NewFlagSet("update", flag.ExitOnError)
 	updateSubcommand.StringVar(&argImportPath, "part", "", "update part import path")
@@ -318,185 +326,240 @@ func main() {
 
 	case "add":
 		if err := addSubcommand.Parse(os.Args[2:]); err != nil {
-			fmt.Println("*** ERROR - Error adding profile")
+			fmt.Println("*** ERROR - Error parsing add subcommand flags")
 			logger.Fatal().Err(err).Msg("error parsing add subcommand flags")
 		}
-		if argImportPath == "" {
-			fmt.Println("*** ERROR - Profile data required to add a profile, usage: ./ccli add -profile <Path>")
-			logger.Fatal().Msg("error adding profile, no import path given")
+		if argImportPath == "" && argPartImportPath == "" {
+			fmt.Println("*** ERROR - Data required to add a part/profile, usage: ./ccli add -profile|-part <Path>")
+			logger.Fatal().Msg("error adding data, no import path given")
 		}
-		if argImportPath[len(argImportPath)-5:] != ".yaml" && argImportPath[len(argImportPath)-4:] != ".yml" {
-			fmt.Println("*** ERROR - Import path must be a .yaml or .yml file")
-			logger.Fatal().Msg("error importing profile, import path not a yaml file")
-		}
-		f, err := os.Open(argImportPath)
-		if err != nil {
-			fmt.Println("*** ERROR - Error opening profile file, check logs for more info")
-			logger.Fatal().Err(err).Msg("error opening file")
-		}
-		defer f.Close()
-		data, err := io.ReadAll(f)
-		if err != nil {
-			fmt.Println("*** ERROR - Error reading file")
-			logger.Fatal().Err(err).Msg("error reading file")
-		}
-		var profileData yaml.Profile
-		if err = yaml.Unmarshal(data, &profileData); err != nil {
-			fmt.Println("*** ERROR - Error decoding file contents")
-			logger.Fatal().Err(err).Msg("error decoding file contents")
-		}
-		switch profileData.Profile {
-		case "security":
-			var securityProfile yaml.SecurityProfile
-			if err = yaml.Unmarshal(data, &securityProfile); err != nil {
-				fmt.Println("*** ERROR - Error unmarshaling security profile")
-				logger.Fatal().Err(err).Msg("error unmarshaling security profile")
+		if argImportPath != "" {
+			if argImportPath[len(argImportPath)-5:] != ".yaml" && argImportPath[len(argImportPath)-4:] != ".yml" {
+				fmt.Println("*** ERROR - Import path must be a .yaml or .yml file")
+				logger.Fatal().Msg("error importing profile, import path not a yaml file")
 			}
-			jsonSecurityProfile, err := json.Marshal(securityProfile)
+			f, err := os.Open(argImportPath)
 			if err != nil {
-				fmt.Println("*** ERROR - Error marshaling json")
-				logger.Fatal().Err(err).Msg("error marshaling json")
+				fmt.Println("*** ERROR - Error opening profile file, check logs for more info")
+				logger.Fatal().Err(err).Msg("error opening file")
 			}
-			if profileData.CatalogID == "" && profileData.FVC == "" && profileData.Sha256 == "" {
-				fmt.Println("*** ERROR - Error adding profile, no part identifier given")
-				logger.Fatal().Msg("error adding profile, no part identifier given")
-			}
-			if profileData.CatalogID != "" {
-				if err = graphql.AddProfile(context.Background(), client, profileData.CatalogID, profileData.Profile, jsonSecurityProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
-				}
-				fmt.Printf("Successfully added security profile to %s-%s\n", profileData.Name, profileData.Version)
-			}
-			if profileData.FVC != "" {
-				uuid, err := graphql.GetPartIDByFVC(context.Background(), client, profileData.FVC)
-				if err != nil {
-					fmt.Println("*** ERROR - Error retrieving part id by fvc")
-					logger.Fatal().Err(err).Msg("error retrieving part id by fvc")
-				}
-				if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonSecurityProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
-				}
-				fmt.Printf("Successfully added security profile to %s-%s\n", profileData.Name, profileData.Version)
-				break
-			}
-			if profileData.Sha256 != "" {
-				uuid, err := graphql.GetPartIDBySha256(context.Background(), client, profileData.Sha256)
-				if err != nil {
-					fmt.Println("*** ERROR - Error retrieving part id by sha256")
-					logger.Fatal().Err(err).Msg("error retrieving part id by sha256")
-				}
-				if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonSecurityProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
-				}
-				fmt.Printf("Successfully added security profile to %s-%s\n", profileData.Name, profileData.Version)
-			}
-		case "licensing":
-			var licensingProfile yaml.LicensingProfile
-			if err = yaml.Unmarshal(data, &licensingProfile); err != nil {
-				fmt.Println("*** ERROR - Error unmarshaling licensing profile")
-				logger.Fatal().Err(err).Msg("error unmarshaling licensing profile")
-			}
-			jsonLicensingProfile, err := json.Marshal(licensingProfile)
+			defer f.Close()
+			data, err := io.ReadAll(f)
 			if err != nil {
-				fmt.Println("*** ERROR - Error marshaling json")
-				logger.Fatal().Err(err).Msg("error marshaling json")
+				fmt.Println("*** ERROR - Error reading file")
+				logger.Fatal().Err(err).Msg("error reading file")
 			}
-			if profileData.CatalogID == "" && profileData.FVC == "" && profileData.Sha256 == "" {
-				fmt.Println("*** ERROR - Error adding profile, no part identifier given")
-				logger.Fatal().Msg("error adding profile, no part identifier given")
+			var profileData yaml.Profile
+			if err = yaml.Unmarshal(data, &profileData); err != nil {
+				fmt.Println("*** ERROR - Error unmarshaling file contents")
+				logger.Fatal().Err(err).Msg("error unmarshaling file contents")
 			}
-			if profileData.CatalogID != "" {
-				if err = graphql.AddProfile(context.Background(), client, profileData.CatalogID, profileData.Profile, jsonLicensingProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
+			switch profileData.Profile {
+			case "security":
+				var securityProfile yaml.SecurityProfile
+				if err = yaml.Unmarshal(data, &securityProfile); err != nil {
+					fmt.Println("*** ERROR - Error unmarshaling security profile")
+					logger.Fatal().Err(err).Msg("error unmarshaling security profile")
 				}
-				fmt.Printf("Successfully added licensing profile to %s-%s\n", profileData.Name, profileData.Version)
-			}
-			if profileData.FVC != "" {
-				uuid, err := graphql.GetPartIDByFVC(context.Background(), client, profileData.FVC)
+				jsonSecurityProfile, err := json.Marshal(securityProfile)
 				if err != nil {
-					fmt.Println("*** ERROR - Error retrieving part id by fvc")
-					logger.Fatal().Err(err).Msg("error retrieving part id by fvc")
+					fmt.Println("*** ERROR - Error marshaling json")
+					logger.Fatal().Err(err).Msg("error marshaling json")
 				}
-				if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonLicensingProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
+				fmt.Printf("%s\n", string(jsonSecurityProfile))
+				if profileData.CatalogID == "" && profileData.FVC == "" && profileData.Sha256 == "" {
+					fmt.Println("*** ERROR - Error adding profile, no part identifier given")
+					logger.Fatal().Msg("error adding profile, no part identifier given")
 				}
-				fmt.Printf("Successfully added licensing profile to %s-%s\n", profileData.Name, profileData.Version)
-				break
-			}
-			if profileData.Sha256 != "" {
-				uuid, err := graphql.GetPartIDBySha256(context.Background(), client, profileData.Sha256)
+				if profileData.CatalogID != "" {
+					if err = graphql.AddProfile(context.Background(), client, profileData.CatalogID, profileData.Profile, jsonSecurityProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added security profile to %s-%s\n", profileData.Name, profileData.Version)
+				}
+				if profileData.FVC != "" {
+					uuid, err := graphql.GetPartIDByFVC(context.Background(), client, profileData.FVC)
+					if err != nil {
+						fmt.Println("*** ERROR - Error retrieving part id by fvc")
+						logger.Fatal().Err(err).Msg("error retrieving part id by fvc")
+					}
+					if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonSecurityProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added security profile to %s-%s\n", profileData.Name, profileData.Version)
+					break
+				}
+				if profileData.Sha256 != "" {
+					uuid, err := graphql.GetPartIDBySha256(context.Background(), client, profileData.Sha256)
+					if err != nil {
+						fmt.Println("*** ERROR - Error retrieving part id by sha256")
+						logger.Fatal().Err(err).Msg("error retrieving part id by sha256")
+					}
+					if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonSecurityProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added security profile to %s-%s\n", profileData.Name, profileData.Version)
+				}
+			case "licensing":
+				var licensingProfile yaml.LicensingProfile
+				if err = yaml.Unmarshal(data, &licensingProfile); err != nil {
+					fmt.Println("*** ERROR - Error unmarshaling licensing profile")
+					logger.Fatal().Err(err).Msg("error unmarshaling licensing profile")
+				}
+				jsonLicensingProfile, err := json.Marshal(licensingProfile)
 				if err != nil {
-					fmt.Println("*** ERROR - Error retrieving part id by sha256")
-					logger.Fatal().Err(err).Msg("error retrieving part id by sha256")
+					fmt.Println("*** ERROR - Error marshaling json")
+					logger.Fatal().Err(err).Msg("error marshaling json")
 				}
-				if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonLicensingProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
+				if profileData.CatalogID == "" && profileData.FVC == "" && profileData.Sha256 == "" {
+					fmt.Println("*** ERROR - Error adding profile, no part identifier given")
+					logger.Fatal().Msg("error adding profile, no part identifier given")
 				}
-				fmt.Printf("Successfully added licensing profile to %s-%s\n", profileData.Name, profileData.Version)
+				if profileData.CatalogID != "" {
+					if err = graphql.AddProfile(context.Background(), client, profileData.CatalogID, profileData.Profile, jsonLicensingProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added licensing profile to %s-%s\n", profileData.Name, profileData.Version)
+				}
+				if profileData.FVC != "" {
+					uuid, err := graphql.GetPartIDByFVC(context.Background(), client, profileData.FVC)
+					if err != nil {
+						fmt.Println("*** ERROR - Error retrieving part id by fvc")
+						logger.Fatal().Err(err).Msg("error retrieving part id by fvc")
+					}
+					if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonLicensingProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added licensing profile to %s-%s\n", profileData.Name, profileData.Version)
+					break
+				}
+				if profileData.Sha256 != "" {
+					uuid, err := graphql.GetPartIDBySha256(context.Background(), client, profileData.Sha256)
+					if err != nil {
+						fmt.Println("*** ERROR - Error retrieving part id by sha256")
+						logger.Fatal().Err(err).Msg("error retrieving part id by sha256")
+					}
+					if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonLicensingProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added licensing profile to %s-%s\n", profileData.Name, profileData.Version)
+				}
+			case "quality":
+				var qualityProfile yaml.QualityProfile
+				if err = yaml.Unmarshal(data, &qualityProfile); err != nil {
+					fmt.Println("*** ERROR - Error unmarshaling quality profile")
+					logger.Fatal().Err(err).Msg("error unmarshaling quality profile")
+				}
+				jsonQualityProfile, err := json.Marshal(qualityProfile)
+				if err != nil {
+					fmt.Println("*** ERROR - Error marshaling json")
+					logger.Fatal().Err(err).Msg("error marshaling json")
+				}
+				if profileData.CatalogID == "" && profileData.FVC == "" && profileData.Sha256 == "" {
+					fmt.Println("*** ERROR - Error adding profile, no part identifier given")
+					logger.Fatal().Msg("error adding profile, no part identifier given")
+				}
+				if profileData.CatalogID != "" {
+					if err = graphql.AddProfile(context.Background(), client, profileData.CatalogID, profileData.Profile, jsonQualityProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added quality profile to %s-%s\n", profileData.Name, profileData.Version)
+				}
+				if profileData.FVC != "" {
+					uuid, err := graphql.GetPartIDByFVC(context.Background(), client, profileData.FVC)
+					if err != nil {
+						fmt.Println("*** ERROR - Error retrieving part id by fvc")
+						logger.Fatal().Err(err).Msg("error retrieving part id by fvc")
+					}
+					if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonQualityProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added quality profile to %s-%s\n", profileData.Name, profileData.Version)
+					break
+				}
+				if profileData.Sha256 != "" {
+					uuid, err := graphql.GetPartIDBySha256(context.Background(), client, profileData.Sha256)
+					if err != nil {
+						fmt.Println("*** ERROR - Error retrieving part id by sha256")
+						logger.Fatal().Err(err).Msg("error retrieving part id by sha256")
+					}
+					if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonQualityProfile); err != nil {
+						fmt.Println("*** ERROR - Error adding profile, check logs for more info")
+						logger.Fatal().Err(err).Msg("error adding profile")
+					}
+					fmt.Printf("Successfully added quality profile to %s-%s\n", profileData.Name, profileData.Version)
+				}
 			}
-		case "quality":
-			var qualityProfile yaml.QualityProfile
-			if err = yaml.Unmarshal(data, &qualityProfile); err != nil {
-				fmt.Println("*** ERROR - Error unmarshaling quality profile")
-				logger.Fatal().Err(err).Msg("error unmarshaling quality profile")
+		}
+		if argPartImportPath != "" {
+			if argPartImportPath[len(argPartImportPath)-5:] != ".yaml" && argPartImportPath[len(argPartImportPath)-4:] != ".yml" {
+				fmt.Println("*** ERROR - Import path must be a .yaml or .yml file")
+				logger.Fatal().Msg("error importing part, import path not a yaml file")
 			}
-			jsonQualityProfile, err := json.Marshal(qualityProfile)
+			f, err := os.Open(argPartImportPath)
 			if err != nil {
-				fmt.Println("*** ERROR - Error marshaling json")
-				logger.Fatal().Err(err).Msg("error marshaling json")
+				fmt.Println("*** ERROR - Error opening part file, check logs for more info")
+				logger.Fatal().Err(err).Msg("error opening file")
 			}
-			if profileData.CatalogID == "" && profileData.FVC == "" && profileData.Sha256 == "" {
-				fmt.Println("*** ERROR - Error adding profile, no part identifier given")
-				logger.Fatal().Msg("error adding profile, no part identifier given")
+			defer f.Close()
+			data, err := io.ReadAll(f)
+			if err != nil {
+				fmt.Println("*** ERROR - Error reading file")
+				logger.Fatal().Err(err).Msg("error reading file")
 			}
-			if profileData.CatalogID != "" {
-				if err = graphql.AddProfile(context.Background(), client, profileData.CatalogID, profileData.Profile, jsonQualityProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
-				}
-				fmt.Printf("Successfully added quality profile to %s-%s\n", profileData.Name, profileData.Version)
+			var partData yaml.Part
+			if err = yaml.Unmarshal(data, &partData); err != nil {
+				fmt.Println("*** ERROR - Error unmarshaling file contents")
+				logger.Fatal().Err(err).Msg("error unmarshaling file contents")
 			}
-			if profileData.FVC != "" {
-				uuid, err := graphql.GetPartIDByFVC(context.Background(), client, profileData.FVC)
-				if err != nil {
-					fmt.Println("*** ERROR - Error retrieving part id by fvc")
-					logger.Fatal().Err(err).Msg("error retrieving part id by fvc")
-				}
-				if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonQualityProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
-				}
-				fmt.Printf("Successfully added quality profile to %s-%s\n", profileData.Name, profileData.Version)
-				break
+			createdPart, err := graphql.AddPart(context.Background(), client, partData)
+			if err != nil {
+				fmt.Println("*** ERROR - Error adding part, check logs for more info")
+				logger.Fatal().Err(err).Msg("error adding part")
 			}
-			if profileData.Sha256 != "" {
-				uuid, err := graphql.GetPartIDBySha256(context.Background(), client, profileData.Sha256)
-				if err != nil {
-					fmt.Println("*** ERROR - Error retrieving part id by sha256")
-					logger.Fatal().Err(err).Msg("error retrieving part id by sha256")
-				}
-				if err = graphql.AddProfile(context.Background(), client, uuid.String(), profileData.Profile, jsonQualityProfile); err != nil {
-					fmt.Println("*** ERROR - Error adding profile, check logs for more info")
-					logger.Fatal().Err(err).Msg("error adding profile")
-				}
-				fmt.Printf("Successfully added quality profile to %s-%s\n", profileData.Name, profileData.Version)
+			prettyPart, err := json.MarshalIndent(&createdPart, "", indent)
+			if err != nil {
+				fmt.Println("*** ERROR - Error prettifying json response")
 			}
+			fmt.Printf("Successfully added part from: %s\n", argPartImportPath)
+			fmt.Printf("%s\n", string(prettyPart))
+
 		}
 	case "find":
 		if err := findSubcommand.Parse(os.Args[2:]); err != nil {
 			fmt.Println("*** ERROR - Error finding part")
 			logger.Fatal().Err(err).Msg("error parsing find subcommand flags")
 		}
-		if argSHA256 == "" && argSearchQuery == "" && argFVC == "" {
+		if argSHA256 == "" && argPartID == "" && argFVC == "" && argSearchQuery == "" {
 			fmt.Println("*** ERROR - error finding part, find part usage:")
 			findSubcommand.PrintDefaults()
 			logger.Fatal().Msg("error finding part, no data provided")
+		}
+		if argProfileType != "" {
+			if argPartID == "" {
+				fmt.Println("*** ERROR - Error retrieving profile, part id needed: ./ccli find -profile <type> -id <part_id>")
+				logger.Fatal().Msg("error getting profile, missing part id")
+			}
+			profile, err := graphql.GetProfile(context.Background(), client, argPartID, argProfileType)
+			if err != nil {
+				fmt.Println("*** ERROR - Error retrieving profile, check logs for more info")
+				logger.Fatal().Err(err).Msg("error retrieving profile")
+			}
+			prettyJson, err := json.MarshalIndent(&profile, "", indent)
+			if err != nil {
+				fmt.Println("*** ERROR - Error prettifying json")
+				logger.Fatal().Err(err).Msg("error prettifying json")
+			}
+			fmt.Printf("%s\n", string(prettyJson))
+			os.Exit(0)
 		}
 		if argSHA256 != "" {
 			partID, err := graphql.GetPartIDBySha256(context.Background(), client, argSHA256)
@@ -527,6 +590,19 @@ func main() {
 				logger.Fatal().Err(err).Msg("error prettifying json")
 			}
 			fmt.Printf("Result: %s\n", string(prettyJson))
+		}
+		if argPartID != "" {
+			response, err := graphql.GetPartByID(context.Background(), client, argPartID)
+			if err != nil {
+				fmt.Println("*** ERROR - Error getting part by id")
+				logger.Fatal().Err(err).Msg("error getting part by id")
+			}
+			prettyJson, err := json.MarshalIndent(&response, "", indent)
+			if err != nil {
+				fmt.Println("*** ERROR - Error prettifying response")
+				logger.Fatal().Err(err).Msg("error prettifying json")
+			}
+			fmt.Printf("%s\n", string(prettyJson))
 		}
 	case "query":
 		if err := querySubcommand.Parse(os.Args[2:]); err != nil {

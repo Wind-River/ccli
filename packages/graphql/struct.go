@@ -15,7 +15,7 @@ type Upload os.File
 
 type Archive struct {
 	Sha256     string    `graphql:"sha256"`
-	Size       int64     `graphql:"Size"`
+	Size       int64     `graphql:"size"`
 	PartID     uuid.UUID `graphql:"part_id"`
 	Part       Part
 	Md5        string `graphql:"md5"`
@@ -54,12 +54,21 @@ type PartInput struct {
 	Comprised            *UUID  `graphql:"comprised" json:"comprised"`
 }
 
-type Profile struct {
-	Key       string     `graphql:"key"`
-	Documents []Document `graphql:"documents"`
+type NewPartInput struct {
+	Type             string `graphql:"type" json:"type"`
+	Name             string `graphql:"name" json:"name"`
+	Version          string `graphql:"version" json:"version"`
+	Label            string `graphql:"label" json:"label"`
+	FamilyName       string `graphql:"family_name" json:"family_name"`
+	License          string `graphql:"license" json:"license"`
+	LicenseRationale string `graphql:"license_rationale" json:"license_rationale"`
+	Description      string `graphql:"description" json:"description"`
+	Comprised        *UUID  `graphql:"comprised" json:"comprised"`
 }
 
+type Profile []Document
+
 type Document struct {
-	Title    string          `graphql:"title"`
-	Document json.RawMessage `graphql:"document"`
+	Title    string          `graphql:"title" json:"title"`
+	Document json.RawMessage `graphql:"document" json:"document"`
 }

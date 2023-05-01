@@ -30,6 +30,62 @@ func AddProfile(ctx context.Context, client *graphql.Client, id string, key stri
 	return nil
 }
 
+func GetProfile(ctx context.Context, client *graphql.Client, id string, key string) (*Profile, error) {
+	var query struct {
+		Profile `graphql:"profile(id:$id, key:$key)"`
+	}
+
+	variables := map[string]interface{}{
+		"id":  UUID(id),
+		"key": key,
+	}
+
+	if err := client.Query(ctx, &query, variables); err != nil {
+		return nil, err
+	}
+
+	return &query.Profile, nil
+}
+
+func AddPart(ctx context.Context, client *graphql.Client, newPart yaml.Part) (*Part, error) {
+	var newPartInput NewPartInput
+
+	if err := YamlToNewPartInput(newPart, &newPartInput); err != nil {
+		return nil, err
+	}
+
+	var mutation struct {
+		Part `graphql:"createPart(partInput: $partInput)"`
+	}
+
+	variables := map[string]interface{}{
+		"partInput": newPartInput,
+	}
+
+	if err := client.Mutate(ctx, &mutation, variables); err != nil {
+		return nil, err
+	}
+
+	if newPart.Aliases != nil {
+		var aliasMutation struct {
+			UUID `graphql:"createAlias(id: $id, alias: $alias)"`
+		}
+
+		for _, v := range newPart.Aliases {
+			aliasVariables := map[string]interface{}{
+				"id":    UUID(mutation.ID.String()),
+				"alias": v,
+			}
+
+			if err := client.Mutate(ctx, &aliasMutation, aliasVariables); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return &mutation.Part, nil
+}
+
 // retrieve part data from provided sha256 value
 func GetPartIDBySha256(ctx context.Context, client *graphql.Client, sha256 string) (*uuid.UUID, error) {
 	var query struct {
@@ -187,6 +243,12 @@ func UpdatePart(ctx context.Context, client *graphql.Client, partData *yaml.Part
 	if partData.Version != "" {
 		partInput.Version = partData.Version
 	}
+	if partData.FamilyName != "" {
+		partInput.FamilyName = partData.FamilyName
+	}
+	if partData.Type != "" {
+		partInput.Type = partData.Type
+	}
 	if partData.Label != "" {
 		partInput.Label = partData.Label
 	}
@@ -242,6 +304,8 @@ func UnmarshalPart(part *Part, yamlPart *yaml.Part) error {
 	yamlPart.FVC = part.FileVerificationCode
 	yamlPart.Name = part.Name
 	yamlPart.Version = part.Version
+	yamlPart.FamilyName = part.FamilyName
+	yamlPart.Type = part.PartType
 	yamlPart.Label = part.Label
 	yamlPart.Description = part.Description
 	yamlPart.License.LicenseExpression = part.License
@@ -252,6 +316,28 @@ func UnmarshalPart(part *Part, yamlPart *yaml.Part) error {
 	yamlPart.Aliases = part.Aliases
 	if part.Comprised != uuid.Nil {
 		yamlPart.ComprisedOf = part.Comprised.String()
+	}
+	return nil
+}
+
+func YamlToNewPartInput(yamlPart yaml.Part, newPartInput *NewPartInput) error {
+	newPartInput.Type = yamlPart.Type
+	newPartInput.Name = yamlPart.Name
+	newPartInput.Version = yamlPart.Version
+	newPartInput.Label = yamlPart.Label
+	newPartInput.FamilyName = yamlPart.FamilyName
+	newPartInput.License = yamlPart.License.LicenseExpression
+	newPartInput.LicenseRationale = yamlPart.License.AnalysisType
+	newPartInput.Description = yamlPart.Description
+	if yamlPart.ComprisedOf != "" {
+		comprisedUUID, err := uuid.Parse(yamlPart.ComprisedOf)
+		if err != nil {
+			return err
+		}
+		if comprisedUUID != uuid.Nil {
+			graphqlUUID := UUID(comprisedUUID.String())
+			newPartInput.Comprised = &graphqlUUID
+		}
 	}
 	return nil
 }

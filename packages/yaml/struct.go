@@ -7,6 +7,8 @@ type Part struct {
 	CatalogID   string  `yaml:"catalog_id"`
 	Name        string  `yaml:"name"`
 	Version     string  `yaml:"version"`
+	Type        string  `yaml:"type"`
+	FamilyName  string  `yaml:"family_name"`
 	Label       string  `yaml:"label"`
 	Description string  `yaml:"description"`
 	License     struct {
@@ -30,44 +32,44 @@ type Profile struct {
 }
 
 type SecurityProfile struct {
-	CVEList []CVE `yaml:"cve_list"`
+	CVEList []CVE `yaml:"cve_list" json:"cve_list"`
 }
 
 type QualityProfile struct {
-	BugList []Bug `yaml:"bug_list"`
+	BugList []Bug `yaml:"bug_list" json:"bug_list"`
 }
 
 type LicensingProfile struct {
-	LicenseAnalysis   []License `yaml:"license_analysis"`
-	Copyrights        []string  `yaml:"copyrights"`
-	LegalNotice       string    `yaml:"legal_notice"`
-	OtherLegalNotices []string  `yaml:"other_legal_notices"`
+	LicenseAnalysis   []License `yaml:"license_analysis" json:"license_analysis"`
+	Copyrights        []string  `yaml:"copyrights" json:"copyrights"`
+	LegalNotice       string    `yaml:"legal_notice" json:"legal_notices"`
+	OtherLegalNotices []string  `yaml:"other_legal_notices" json:"other_legal_notices"`
 }
 
 type License struct {
-	LicenseExpression string `yaml:"license_expression"`
-	AnalysisType      string `yaml:"analysis_type"`
-	Comments          string `yaml:"comments"`
+	LicenseExpression string `yaml:"license_expression" json:"license_expression"`
+	AnalysisType      string `yaml:"analysis_type" json:"analysis_type"`
+	Comments          string `yaml:"comments" json:"comments"`
 }
 
 type CVE struct {
-	ID          string   `yaml:"cve_id"`
-	Description string   `yaml:"description"`
-	Status      string   `yaml:"status"`
-	Date        string   `yaml:"date"`
-	Comments    string   `yaml:"comments"`
-	Link        string   `yaml:"link"`
-	References  []string `yaml:"references"`
+	ID          string   `yaml:"cve_id" json:"cve_id"`
+	Description string   `yaml:"description" json:"description"`
+	Status      string   `yaml:"status" json:"status"`
+	Date        string   `yaml:"date" json:"date"`
+	Comments    string   `yaml:"comments" json:"comments"`
+	Link        string   `yaml:"link" json:"link"`
+	References  []string `yaml:"references" json:"references"`
 }
 
 type Bug struct {
-	Name        string   `yaml:"name"`
-	ID          string   `yaml:"id"`
-	Description string   `yaml:"description"`
-	Status      string   `yaml:"status"`
-	Level       string   `yaml:"level"`
-	Date        string   `yaml:"date"`
-	Link        string   `yaml:"link"`
-	Comments    string   `yaml:"comments"`
-	References  []string `yaml:"references"`
+	Name        string   `yaml:"name" json:"name"`
+	ID          string   `yaml:"id" json:"id"`
+	Description string   `yaml:"description" json:"description"`
+	Status      string   `yaml:"status" json:"status"`
+	Level       string   `yaml:"level" json:"level"`
+	Date        string   `yaml:"date" json:"date"`
+	Link        string   `yaml:"link" json:"link"`
+	Comments    string   `yaml:"comments" json:"comments"`
+	References  []string `yaml:"references" json:"references"`
 }
