@@ -632,7 +632,7 @@ func main() {
 		if argQuery != "" {
 			response, err := graphql.Query(context.Background(), client, argQuery)
 			if err != nil {
-				fmt.Printf("***ERROR - Error executing query, check logs for more info")
+				fmt.Println("***ERROR - Error executing query, check logs for more info")
 				logger.Fatal().Err(err).Msg("error querying graphql")
 			}
 

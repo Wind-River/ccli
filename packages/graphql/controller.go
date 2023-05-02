@@ -66,18 +66,47 @@ func AddPart(ctx context.Context, client *graphql.Client, newPart yaml.Part) (*P
 		return nil, err
 	}
 
-	if newPart.Aliases != nil {
+	if newPart.Aliases != nil && len(newPart.Aliases) != 0 {
 		var aliasMutation struct {
 			UUID `graphql:"createAlias(id: $id, alias: $alias)"`
 		}
 
 		for _, v := range newPart.Aliases {
 			aliasVariables := map[string]interface{}{
-				"id":    UUID(mutation.ID.String()),
+				"id":    UUID(mutation.Part.ID.String()),
 				"alias": v,
 			}
 
 			if err := client.Mutate(ctx, &aliasMutation, aliasVariables); err != nil {
+				return nil, err
+			}
+
+		}
+	}
+
+	if newPart.CompositeList != nil && len(newPart.CompositeList) != 0 {
+		var compositeMutation struct {
+			PartHasPart bool `graphql:"partHasPart(parent: $parent, child: $child, path: $path)"`
+		}
+
+		seen := make(map[string]bool)
+		compositeList := []string{}
+
+		for _, v := range newPart.CompositeList {
+			if !seen[v] {
+				compositeList = append(compositeList, v)
+				seen[v] = true
+			}
+		}
+
+		for _, v := range compositeList {
+			compositeVariables := map[string]interface{}{
+				"parent": UUID(mutation.ID.String()),
+				"child":  UUID(v),
+				"path":   v,
+			}
+
+			if err := client.Mutate(ctx, &compositeMutation, compositeVariables); err != nil {
 				return nil, err
 			}
 		}
