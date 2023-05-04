@@ -180,6 +180,10 @@ func main() {
 			fmt.Println("*** ERROR - Error exporting data")
 			logger.Fatal().Err(err).Msg("error parsing export subcommand flags")
 		}
+		if argPartID == "" && argFVC == "" && argSHA256 == "" && argTemplate == "" {
+			fmt.Println("*** ERROR - Part identifier required to export data")
+			logger.Fatal().Msg("error exporting part, no part identifier given")
+		}
 		if argExportPath == "" {
 			fmt.Println("*** ERROR - Path required to export data")
 			logger.Fatal().Msg("error exporting part, no path given")
@@ -187,10 +191,6 @@ func main() {
 		if argExportPath[len(argExportPath)-5:] != ".yaml" && argExportPath[len(argExportPath)-4:] != ".yml" {
 			fmt.Println("*** ERROR - Export path must be a .yaml or .yml file")
 			logger.Fatal().Msg("error exporting part, export path not a yaml file")
-		}
-		if argPartID == "" && argFVC == "" && argSHA256 == "" && argTemplate == "" {
-			fmt.Println("*** ERROR - Part identifier required to export data")
-			logger.Fatal().Msg("error exporting part, no part identifier given")
 		}
 		if argTemplate != "" {
 			switch argTemplate {
