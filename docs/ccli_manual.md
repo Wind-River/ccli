@@ -51,5 +51,10 @@ $ ccli find -sha256 <sha256>
 ```
 ccli find -profile security -id werS12-da54FaSff-9U2aef
 ```
+- **delete**
+--id <catalog_id> - deletes a part from the catalog using part id.
+```
+ccli delete -id adjb23-A4D3faTa-d95Xufs
+```
 
 

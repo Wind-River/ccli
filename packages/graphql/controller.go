@@ -30,6 +30,21 @@ func AddProfile(ctx context.Context, client *graphql.Client, id string, key stri
 	return nil
 }
 
+func DeletePart(ctx context.Context, client *graphql.Client, id string) error {
+	var mutation struct {
+		DeletePart bool `graphql:"deletePart(part_id: $id)"`
+	}
+
+	variables := map[string]interface{}{
+		"id": UUID(id),
+	}
+
+	if err := client.Mutate(ctx, &mutation, variables); err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetProfile(ctx context.Context, client *graphql.Client, id string, key string) (*Profile, error) {
 	var query struct {
 		Profile `graphql:"profile(id:$id, key:$key)"`

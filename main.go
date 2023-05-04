@@ -20,6 +20,7 @@ import (
 // variable assignment for configuration file and command line flags
 var configData config.ConfigData
 var indent string
+var argExampleMode bool
 var argPartID string
 var argSHA256 string
 var argExportPath string
@@ -36,6 +37,7 @@ var querySubcommand *flag.FlagSet
 var findSubcommand *flag.FlagSet
 var uploadSubcommand *flag.FlagSet
 var updateSubcommand *flag.FlagSet
+var deleteSubcommand *flag.FlagSet
 
 // initialize configuration file and flag values
 func init() {
@@ -62,6 +64,7 @@ func init() {
 		indentString += " "
 	}
 	indent = indentString
+	flag.BoolVar(&argExampleMode, "e", false, "used to print subcommand usage examples")
 
 }
 
@@ -79,10 +82,32 @@ func printHelp() {
 	fmt.Println("\tUsed to upload packages - ccli upload <Path>")
 	fmt.Println("update")
 	fmt.Println("\tUsed to update part data - ccli update <Path>")
+	fmt.Println("delete")
+	deleteSubcommand.PrintDefaults()
+	fmt.Println("ping")
+	fmt.Println("\tUsed to ping server address")
 	os.Exit(1)
 }
 
 func main() {
+	flag.Parse()
+	if argExampleMode {
+		exampleString :=
+			`	$ ccli add --part openssl-1.1.1n.yml
+	$ ccli add --profile profile_openssl-1.1.1n.yml
+	$ ccli query "{part(id:\"aR25sd-V8dDvs2-p3Gfae\"){file_verification_code}}"
+	$ ccli export --id sdl3ga-naTs42g5-rbow2A -o file.yml
+	$ ccli export --template security -o file.yml
+	$ ccli update --part openssl-1.1.1n.v4.yml
+	$ ccli upload openssl-1.1.1n.tar.gz
+	$ ccli find -part busybox
+	$ ccli find -sha256 2493347f59c03...
+	$ ccli find -profile security -id werS12-da54FaSff-9U2aef
+	$ ccli delete -id adjb23-A4D3faTa-d95Xufs
+	$ ccli ping`
+		fmt.Printf("%s\n", exampleString)
+		os.Exit(0)
+	}
 	if configData.ServerAddr == "" {
 		fmt.Println("*** ERROR - Invalid configuration file, no server address located")
 		log.Fatal().Msg("error reading server address")
@@ -137,6 +162,9 @@ func main() {
 	updateSubcommand.StringVar(&argImportPath, "part", "", "update part import path")
 
 	uploadSubcommand = flag.NewFlagSet("upload", flag.ExitOnError)
+
+	deleteSubcommand = flag.NewFlagSet("delete", flag.ExitOnError)
+	deleteSubcommand.StringVar(&argPartID, "id", "", "delete part from catalog using catalog id")
 
 	if len(os.Args) < 2 {
 		printHelp()
@@ -568,6 +596,10 @@ func main() {
 				fmt.Println("*** ERROR - Error retrieving profile, check logs for more info")
 				logger.Fatal().Err(err).Msg("error retrieving profile")
 			}
+			if len(*profile) < 1 {
+				fmt.Println("No documents found")
+				os.Exit(0)
+			}
 			prettyJson, err := json.MarshalIndent(&profile, "", indent)
 			if err != nil {
 				fmt.Println("*** ERROR - Error prettifying json")
@@ -708,6 +740,22 @@ func main() {
 				logger.Fatal().Err(err).Msg("error prettifying json")
 			}
 			fmt.Printf("Part successfully updated\n%s\n", string(prettyJson))
+		}
+	case "delete":
+		if err := deleteSubcommand.Parse(os.Args[2:]); err != nil {
+			fmt.Println("*** ERROR - Error deleting part, delete subcommand usage: ./ccli delete -id <catalog_id>")
+			logger.Fatal().Err(err).Msg("error deleting part")
+		}
+		if argPartID == "" {
+			fmt.Println("*** ERROR - Error deleting part, delete subcommand usage: ./ccli delete -id <catalog_id>")
+			logger.Fatal().Msg("error deleting part, no id given")
+		}
+		if argPartID != "" {
+			if err := graphql.DeletePart(context.Background(), client, argPartID); err != nil {
+				fmt.Println("*** ERROR - Error deleting part, check logs for more info")
+				logger.Fatal().Err(err).Msg("error deleting part from catalog")
+			}
+			fmt.Printf("Successfully deleted id: %s from catalog\n", argPartID)
 		}
 	case "ping":
 		if configData.ServerAddr == "" {
