@@ -409,7 +409,6 @@ func main() {
 					fmt.Println("*** ERROR - Error marshaling json")
 					logger.Fatal().Err(err).Msg("error marshaling json")
 				}
-				fmt.Printf("%s\n", string(jsonSecurityProfile))
 				if profileData.CatalogID == "" && profileData.FVC == "" && profileData.Sha256 == "" {
 					fmt.Println("*** ERROR - Error adding profile, no part identifier given")
 					logger.Fatal().Msg("error adding profile, no part identifier given")
