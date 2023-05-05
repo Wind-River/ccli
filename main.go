@@ -21,6 +21,7 @@ import (
 var configData config.ConfigData
 var indent string
 var argExampleMode bool
+var argHelp bool
 var argPartID string
 var argSHA256 string
 var argExportPath string
@@ -65,6 +66,8 @@ func init() {
 	}
 	indent = indentString
 	flag.BoolVar(&argExampleMode, "e", false, "used to print subcommand usage examples")
+	flag.BoolVar(&argHelp, "h", false, "used to print default subcommand usage")
+	flag.BoolVar(&argHelp, "help", false, "used to print default subcommand usage")
 
 }
 
@@ -81,11 +84,13 @@ func printHelp() {
 	fmt.Println("upload")
 	fmt.Println("\tUsed to upload packages - ccli upload <Path>")
 	fmt.Println("update")
-	fmt.Println("\tUsed to update part data - ccli update <Path>")
+	// fmt.Println("\tUsed to update part data - ccli update -part <Path>")
+	updateSubcommand.PrintDefaults()
 	fmt.Println("delete")
 	deleteSubcommand.PrintDefaults()
 	fmt.Println("ping")
 	fmt.Println("\tUsed to ping server address")
+	fmt.Println("-e - Print a list of example subcommand usage")
 	os.Exit(1)
 }
 
@@ -104,7 +109,8 @@ func main() {
 	$ ccli find -sha256 2493347f59c03...
 	$ ccli find -profile security -id werS12-da54FaSff-9U2aef
 	$ ccli delete -id adjb23-A4D3faTa-d95Xufs
-	$ ccli ping`
+	$ ccli ping
+	$ ccli -e`
 		fmt.Printf("%s\n", exampleString)
 		os.Exit(0)
 	}
@@ -139,34 +145,38 @@ func main() {
 
 	//subcommand flag sets
 	addSubcommand = flag.NewFlagSet("add", flag.ExitOnError)
-	addSubcommand.StringVar(&argImportPath, "profile", "", "add profile import path")
-	addSubcommand.StringVar(&argPartImportPath, "part", "", "add part import path")
+	addSubcommand.StringVar(&argImportPath, "profile", "", "add profile import path, ccli usage: add --profile <file.yaml>")
+	addSubcommand.StringVar(&argPartImportPath, "part", "", "add part import path, ccli usage: add --part <file.yaml>")
 
 	exportSubcommand = flag.NewFlagSet("export", flag.ExitOnError)
-	exportSubcommand.StringVar(&argExportPath, "o", "", "output path for export subcommand")
-	exportSubcommand.StringVar(&argPartID, "id", "", "part id for export subcommand")
-	exportSubcommand.StringVar(&argSHA256, "sha256", "", "sha256 for export subcommand")
-	exportSubcommand.StringVar(&argFVC, "fvc", "", "file verification code for export subcommand")
-	exportSubcommand.StringVar(&argTemplate, "template", "", "used to export profile/part template to output: ./ccli export -template <Type>")
+	exportSubcommand.StringVar(&argExportPath, "o", "", "output path for export subcommand, ccli usage: -o <file.yaml>")
+	exportSubcommand.StringVar(&argPartID, "id", "", "part id for export subcommand, ccli usage: --id <catalog_id>")
+	exportSubcommand.StringVar(&argSHA256, "sha256", "", "sha256 for export subcommand, ccli usage: --sha256 <SHA256>")
+	exportSubcommand.StringVar(&argFVC, "fvc", "", "file verification code for export subcommand, ccli usage: --fvc <file_verification_code>")
+	exportSubcommand.StringVar(&argTemplate, "template", "", "used to export profile/part template to output, ccli usage: export --template <Type>")
 
 	querySubcommand = flag.NewFlagSet("query", flag.ExitOnError)
 
 	findSubcommand = flag.NewFlagSet("find", flag.ExitOnError)
-	findSubcommand.StringVar(&argProfileType, "profile", "", "retrieve profile using key")
-	findSubcommand.StringVar(&argSHA256, "sha256", "", "retrieve part id using sha256")
-	findSubcommand.StringVar(&argSearchQuery, "part", "", "retrieve part data using search query")
-	findSubcommand.StringVar(&argFVC, "fvc", "", "retrieve part id using file verification code")
-	findSubcommand.StringVar(&argPartID, "id", "", "retrieve part data using part id")
+	findSubcommand.StringVar(&argProfileType, "profile", "", "retrieve profile using key, ccli usage: --profile <type> --id <catalog_id>")
+	findSubcommand.StringVar(&argSHA256, "sha256", "", "retrieve part id using sha256, ccli usage: --sha256 <SHA256>")
+	findSubcommand.StringVar(&argSearchQuery, "part", "", "retrieve part data using search query, ccli usage: --part <name>")
+	findSubcommand.StringVar(&argFVC, "fvc", "", "retrieve part id using file verification code, ccli usage: --fvc <file_verification_code>")
+	findSubcommand.StringVar(&argPartID, "id", "", "retrieve part data using part id, ccli usage: --id <catalog_id>")
 
 	updateSubcommand = flag.NewFlagSet("update", flag.ExitOnError)
-	updateSubcommand.StringVar(&argImportPath, "part", "", "update part import path")
+	updateSubcommand.StringVar(&argImportPath, "part", "", "update part import path, ccli usage: --part <file.yaml>")
 
 	uploadSubcommand = flag.NewFlagSet("upload", flag.ExitOnError)
 
 	deleteSubcommand = flag.NewFlagSet("delete", flag.ExitOnError)
-	deleteSubcommand.StringVar(&argPartID, "id", "", "delete part from catalog using catalog id")
+	deleteSubcommand.StringVar(&argPartID, "id", "", "delete part from catalog using catalog id, ccli usage: --id <catalog_id>")
 
 	if len(os.Args) < 2 {
+		printHelp()
+	}
+
+	if argHelp {
 		printHelp()
 	}
 
