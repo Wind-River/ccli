@@ -1,3 +1,4 @@
+// Yaml wrapper package implements ccli yaml data structures and provides standard library functionality
 package yaml
 
 import (

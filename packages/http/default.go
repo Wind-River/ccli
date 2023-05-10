@@ -1,3 +1,4 @@
+// Provides default http client with tls verification ignored for self signed certificates and testing
 package http
 
 import (

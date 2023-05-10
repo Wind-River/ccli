@@ -13,6 +13,7 @@ import (
 	graphqlUpload "gitlab.devstar.cloud/WestStar/libraries/go/graphql-upload.git/code"
 )
 
+// Adds a profile document to a part and returns any errors that occur
 func AddProfile(ctx context.Context, client *graphql.Client, id string, key string, document json.RawMessage) error {
 	var mutation struct {
 		AttachDocument bool `graphql:"attachDocument(id: $id, key: $key, document: $document)"`
@@ -30,6 +31,7 @@ func AddProfile(ctx context.Context, client *graphql.Client, id string, key stri
 	return nil
 }
 
+// Delete part from catalog - TODO - this should be difficult to execute
 func DeletePart(ctx context.Context, client *graphql.Client, id string) error {
 	var mutation struct {
 		DeletePart bool `graphql:"deletePart(part_id: $id)"`
@@ -45,6 +47,7 @@ func DeletePart(ctx context.Context, client *graphql.Client, id string) error {
 	return nil
 }
 
+// Retrieves a profile from the catalog
 func GetProfile(ctx context.Context, client *graphql.Client, id string, key string) (*Profile, error) {
 	var query struct {
 		Profile `graphql:"profile(id:$id, key:$key)"`
@@ -62,6 +65,7 @@ func GetProfile(ctx context.Context, client *graphql.Client, id string, key stri
 	return &query.Profile, nil
 }
 
+// Adds a logical part to the catalog using a yaml template format and returns the inserted part
 func AddPart(ctx context.Context, client *graphql.Client, newPart yaml.Part) (*Part, error) {
 	var newPartInput NewPartInput
 
@@ -81,6 +85,7 @@ func AddPart(ctx context.Context, client *graphql.Client, newPart yaml.Part) (*P
 		return nil, err
 	}
 
+	//Alias insertion is handling with createAlias mutation
 	if newPart.Aliases != nil && len(newPart.Aliases) != 0 {
 		var aliasMutation struct {
 			UUID `graphql:"createAlias(id: $id, alias: $alias)"`
@@ -98,12 +103,13 @@ func AddPart(ctx context.Context, client *graphql.Client, newPart yaml.Part) (*P
 
 		}
 	}
-
+	// Subparts are inserted utilizing partHasPart mutation
 	if newPart.CompositeList != nil && len(newPart.CompositeList) != 0 {
 		var compositeMutation struct {
 			PartHasPart bool `graphql:"partHasPart(parent: $parent, child: $child, path: $path)"`
 		}
 
+		// Seen map prevents duplication of subpart paths in the catalog
 		seen := make(map[string]bool)
 		compositeList := []string{}
 
@@ -164,6 +170,7 @@ func GetPartIDByFVC(ctx context.Context, client *graphql.Client, fvc string) (*u
 	return &query.Part.ID, nil
 }
 
+// Retrieves a part from the catalog using catalog id
 func GetPartByID(ctx context.Context, client *graphql.Client, id string) (*Part, error) {
 
 	var query struct {
@@ -180,6 +187,7 @@ func GetPartByID(ctx context.Context, client *graphql.Client, id string) (*Part,
 	return &query.Part, nil
 }
 
+// Retrieves a part from the catalog using file verification code
 func GetPartByFVC(ctx context.Context, client *graphql.Client, fvc string) (*Part, error) {
 
 	var query struct {
@@ -196,6 +204,7 @@ func GetPartByFVC(ctx context.Context, client *graphql.Client, fvc string) (*Par
 	return &query.Part, nil
 }
 
+// Retrieves a part from the catalog using sha256
 func GetPartBySHA256(ctx context.Context, client *graphql.Client, sha256 string) (*Part, error) {
 
 	var query struct {
@@ -212,6 +221,7 @@ func GetPartBySHA256(ctx context.Context, client *graphql.Client, sha256 string)
 	return &query.Part, nil
 }
 
+// Retrieves a slice of parts from the catalog using find_archive query to search by name
 func Search(ctx context.Context, client *graphql.Client, searchQuery string) (*[]Part, error) {
 
 	var query struct {
@@ -246,10 +256,12 @@ func Query(ctx context.Context, client *graphql.Client, query string) ([]byte, e
 	return response, nil
 }
 
+// uploads an archive to the catalog using graphql-upload library
 func UploadFile(httpClient *http.Client, uri string, path string, name string) (*http.Response, error) {
 	return graphqlUpload.UploadFile(httpClient, uri, path, name)
 }
 
+// updates a part record from the catalog using yaml template
 func UpdatePart(ctx context.Context, client *graphql.Client, partData *yaml.Part) (*Part, error) {
 
 	var partInput PartInput
@@ -342,6 +354,7 @@ func UpdatePart(ctx context.Context, client *graphql.Client, partData *yaml.Part
 	return &mutation.Part, nil
 }
 
+// Used to convert a part data structure into the structure expected by yaml i/o
 func UnmarshalPart(part *Part, yamlPart *yaml.Part) error {
 	yamlPart.Format = 1.0
 	yamlPart.CatalogID = part.ID.String()
@@ -364,6 +377,7 @@ func UnmarshalPart(part *Part, yamlPart *yaml.Part) error {
 	return nil
 }
 
+// Used to convert a part in yaml format into the format expected for new part mutation
 func YamlToNewPartInput(yamlPart yaml.Part, newPartInput *NewPartInput) error {
 	newPartInput.Type = yamlPart.Type
 	newPartInput.Name = yamlPart.Name

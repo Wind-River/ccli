@@ -44,7 +44,7 @@ var deleteSubcommand *flag.FlagSet
 func init() {
 	configFile, err := os.Open("ccli_config.yml")
 	if err != nil {
-		fmt.Println("User configuration file not found, using default.")
+		fmt.Println("User configuration file not found, using default. Please copy ccli_config.DEFAULT.yml to ccli_config.yml.")
 	}
 	if configFile == nil {
 		configFile, err = os.Open("ccli_config.DEFAULT.yml")
@@ -71,6 +71,7 @@ func init() {
 
 }
 
+// Prints default subcommand usage for help flag and subcommand errors
 func printHelp() {
 	fmt.Println("Please enter a command:")
 	fmt.Println("add")
@@ -84,7 +85,6 @@ func printHelp() {
 	fmt.Println("upload")
 	fmt.Println("\tUsed to upload packages - ccli upload <Path>")
 	fmt.Println("update")
-	// fmt.Println("\tUsed to update part data - ccli update -part <Path>")
 	updateSubcommand.PrintDefaults()
 	fmt.Println("delete")
 	deleteSubcommand.PrintDefaults()
@@ -96,6 +96,7 @@ func printHelp() {
 
 func main() {
 	flag.Parse()
+	//Used to print examples of ccli usage before checking server connection
 	if argExampleMode {
 		exampleString :=
 			`	$ ccli add --part openssl-1.1.1n.yml
@@ -113,20 +114,6 @@ func main() {
 	$ ccli -e`
 		fmt.Printf("%s\n", exampleString)
 		os.Exit(0)
-	}
-	if configData.ServerAddr == "" {
-		fmt.Println("*** ERROR - Invalid configuration file, no server address located")
-		log.Fatal().Msg("error reading server address")
-	}
-	resp, err := http.DefaultClient.Get(configData.ServerAddr)
-	if err != nil {
-		fmt.Println("*** ERROR - Error contacting server")
-		log.Fatal().Err(err).Msg("error contacting server")
-	}
-	resp.Body.Close()
-	if resp.StatusCode != 200 && resp.StatusCode != 422 {
-		fmt.Println("*** ERROR - Server unreachable, check config file and network configuration")
-		log.Fatal().Msgf("error reaching server, status code: %d", resp.StatusCode)
 	}
 
 	// set global log level to value found in configuration file
@@ -178,6 +165,21 @@ func main() {
 
 	if argHelp {
 		printHelp()
+	}
+
+	if configData.ServerAddr == "" {
+		fmt.Println("*** ERROR - Invalid configuration file, no server address located")
+		log.Fatal().Msg("error reading server address")
+	}
+	resp, err := http.DefaultClient.Get(configData.ServerAddr)
+	if err != nil {
+		fmt.Println("*** ERROR - Error contacting server")
+		log.Fatal().Err(err).Msg("error contacting server")
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 200 && resp.StatusCode != 422 {
+		fmt.Println("*** ERROR - Server unreachable, check config file and network configuration")
+		log.Fatal().Msgf("error reaching server, status code: %d", resp.StatusCode)
 	}
 
 	client := graphql.GetNewClient(configData.ServerAddr, http.DefaultClient)

@@ -40,6 +40,7 @@ $ ccli upload openssl-1.1.1n.tar.gz
 ```
 - **find** 
 --part \<query> - searches catalog for matching part names and displays corresponding data
+--id \<catalog_id> - retrieves a part from catalog using id
 --sha256 \<sha256> - returns part id using given sha256
 --fvc \<file_verification_code> - returns part id using given file verification code
 ```
@@ -55,6 +56,164 @@ ccli find -profile security -id werS12-da54FaSff-9U2aef
 --id <catalog_id> - deletes a part from the catalog using part id.
 ```
 ccli delete -id adjb23-A4D3faTa-d95Xufs
+```
+
+## Add
+- ### Part
+```
+format: 1.0
+fvc: "4656433200c41848db861f590cd5cb929265011204d6ea4851f966fd5f4a33295a2569b35f"
+sha256: "faeeb244c35a348a334f4a59e44626ee870fb07b6884d68c10ae8bc19f83a694"
+catalog_id: null
+name: "busybox"
+version: "1.35.0"
+type: "archive"
+family_name: "busybox"
+label: "busybox-1.35.0"
+description: |
+  Provides many of the Unix utilities in a single executable file.
+license: 
+  license_expression: "GPL-2.0"
+  analysis_type: "automation/topline/1.1"
+size: null
+aliases: 
+  - "busybox-1.35.0"
+  - "busybox-1.35.0.r3"
+comprised_of: null
+composite_list: null
+```
+- ### Security Profile
+```
+profile: 'security'
+format: 1.0
+name: 'busybox'
+version: "1.35.0"
+fvc: "4656433200c41848db861f590cd5cb929265011204d6ea4851f966fd5f4a33295a2569b35f"
+sha256: 'faeeb244c35a348a334f4a59e44626ee870fb07b6884d68c10ae8bc19f83a694' 
+catalog_id: null
+## ----------------------------------------------------
+##                 CVEs
+## ----------------------------------------------------
+cve_list:
+  ## cve
+  - cve_id: 'CVE-2022-30065'
+    description: |
+      A use-after-free in Busybox 1.35-x's awk applet leads to denial of service and 
+      possibly code execution when processing a crafted awk pattern in the copyvar function.
+    status: 'Open'
+    date: '2022-05-02'
+    link: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-30065'
+    comments: |
+      patch is available
+    references: []
+  ## -----------------
+  ## cve
+  ## -----------------
+  - cve_id: 'CVE-2022-28391'
+    description: |
+      BusyBox through 1.35.0 allows remote attackers to execute arbitrary code if netstat 
+      is used to print a DNS PTR record's value to a VT compatible terminal. Alternatively, 
+      the attacker could choose to change the terminal's colors.
+    status: 'open'
+    date: '2022-04-03'
+    comments: null
+    link: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-28391'
+    references: []
+```
+- ### Licensing Profile
+```
+profile: "licensing"
+format: 1.0
+name: "busybox"
+version: "1.35.0"
+fvc: "4656433200c41848db861f590cd5cb929265011204d6ea4851f966fd5f4a33295a2569b35f"
+sha256: "faeeb244c35a348a334f4a59e44626ee870fb07b6884d68c10ae8bc19f83a694"
+catalog_id: null
+
+## ----------------------
+## License Analysis
+## ----------------------
+license_analysis:
+  - license_expression: GPL-2.0
+    analysis_type: expert/mark.gisi@windriver.com
+    comments: null
+  - license_expression: GPL-2.0
+    analysis_type: automation/topline/1.0
+    comments: null
+
+## ----------------------
+## Copyrights
+## ----------------------
+copyrights:
+  - Copyright 1999-2005 Erik Andersen
+
+## ----------------------
+## Legal Notices
+## ----------------------
+legal_notice: |
+  Copyright 1999-2005 Erik Andersen
+
+  This package is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; version 2 dated June, 1991.
+
+  This package is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this package; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA 02110-1301, USA.
+
+## ----------------------
+## Other Legal Notices
+## ----------------------
+other_legal_notices: null
+```
+- ### Quality Profile
+```
+profile: "quality"
+format: 1.0
+name: busybox
+version: "1.35.0"
+fvc: "4656433200c41848db861f590cd5cb929265011204d6ea4851f966fd5f4a33295a2569b35f"
+sha256: "faeeb244c35a348a334f4a59e44626ee870fb07b6884d68c10ae8bc19f83a694"
+catalog_id: null
+## ----------------------------------------------------
+##                 Bugs
+## ----------------------------------------------------
+bug_list:
+  ## -----------------
+  ## bug
+  ## -----------------
+  - name: "Bug 14376"
+    id: "14376"
+    description: |
+      Tar component has a memory leak bug when trying to unpack a tar file..
+    status: "Open"
+    level: "P5"
+    date: "2022-11-23"
+    link: https://bugs.busybox.net/show_bug.cgi?id=14376
+    comments: null
+    references:
+      - "[Busybox Bug Report](https://bugs.busybox.net/show_bug.cgi?id=14376)"
+  ## -----------------
+  ## bug
+  ## -----------------
+  - name: "Bug 14536"
+    id: "14536"
+    description: |
+      Awk from busybox-v1.35.0 doesn’t work.
+    status: "Open"
+    level: "P5"
+    date: "2022-01-21"
+    link: https://bugs.busybox.net/show_bug.cgi?id=14536
+    comments: |
+      There is a patch that reverts awk to busybox-1.33.1.
+    references:
+      - "[Busybox Bug Report](https://bugs.busybox.net/show_bug.cgi?id=14536)"
 ```
 
 

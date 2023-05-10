@@ -1,3 +1,4 @@
+// Json wrapper package implements ccli json data structures and provides standard library functionality
 package json
 
 import (

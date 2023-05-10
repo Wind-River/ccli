@@ -1,3 +1,4 @@
+// Provides access to hasura go graphql client and implements graphql query and mutation functionality.
 package graphql
 
 import (
