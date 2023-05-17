@@ -24,7 +24,6 @@ func AddProfile(ctx context.Context, client *graphql.Client, id string, key stri
 		"key":      key,
 		"document": JSON(document),
 	}
-
 	if err := client.Mutate(ctx, &mutation, variables); err != nil {
 		return err
 	}
