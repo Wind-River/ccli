@@ -65,6 +65,8 @@ github.com/ugorji/go/codec v1.1.7 h1:2SvQaVZ1ouYrrKKwoSk2pzd4A9evlKJb9oTL+OaLUSs
 github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLYF3GoBXY=
 gitlab.devstar.cloud/WestStar/libraries/go/graphql-upload.git v0.3.0 h1:nVG9dc+eDE/h/6bw4MAomMpGVwgjAoDeYVT2SSdksc0=
 gitlab.devstar.cloud/WestStar/libraries/go/graphql-upload.git v0.3.0/go.mod h1:ZLdWO4iyc2549l7CbW3Qd4Sd9n+oNY7B9Qg6cueo5zA=
+gitlab.devstar.cloud/WestStar/libraries/go/graphql-upload.git v0.4.0 h1:45Zy/2ZeUpDaFEwr1bHyiBa5P6lzKzn9QCppONWHpdM=
+gitlab.devstar.cloud/WestStar/libraries/go/graphql-upload.git v0.4.0/go.mod h1:ZLdWO4iyc2549l7CbW3Qd4Sd9n+oNY7B9Qg6cueo5zA=
 go.opentelemetry.io/otel v1.6.3/go.mod h1:7BgNga5fNlF/iZjG06hM3yofffp0ofKCDwSXx1GC4dI=
 go.opentelemetry.io/otel/trace v1.6.3/go.mod h1:GNJQusJlUgZl9/TQBPKU/Y/ty+0iVB5fjhKeJGZPGFs=
 golang.org/x/crypto v0.0.0-20220314234659-1baeb1ce4c0b/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=
