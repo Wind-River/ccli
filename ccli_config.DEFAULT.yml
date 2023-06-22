@@ -2,7 +2,7 @@
 ##
 ##
 ## catalog address
-server_addr: "https://aws-ip-services-tk-dev.wrs.com/api/graphql"
+server_addr: "http://localhost/api/graphql"
 server_port: 80
 ##
 ## logging
