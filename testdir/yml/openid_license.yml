@@ -1,0 +1,30 @@
+profile: "licensing"
+format: 1.0
+fvc: "465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1"
+## ----------------------
+## License Analysis
+## ----------------------
+license_analysis:
+  - license_expression: dummy
+    analysis_type: null
+    comments: null
+  - license_expression: dummy
+    analysis_type: null
+    comments: null
+
+## ----------------------
+## Copyrights
+## ----------------------
+copyrights:
+  - Dummy Copyrights
+
+## ----------------------
+## Legal Notices
+## ----------------------
+legal_notice: |
+  Dummy Legal notice
+
+## ----------------------
+## Other Legal Notices
+## ----------------------
+other_legal_notices: null

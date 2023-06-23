@@ -12,16 +12,16 @@ var logical_part_id string
 
 // TestPing is used to check the connection to the software part catalog's server
 func TestPing(tester *testing.T) {
-	// ccli upload testdir/packages/openid-client-4.9.1.zip
+	// ccli ping
 	cmd := exec.Command("ccli", "ping")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
 		tester.Error("failed to capture command line output", err)
 	}
-	// splitting and extracting the output message to be checked
-	result := strings.Split(string(output), "\n")[1]
-	expected := "Ping Result: Success"
+	// extracting the output message to be checked
+	result := string(output)
+	expected := "Ping Result: Success\n"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
@@ -39,9 +39,9 @@ func TestUpload(tester *testing.T) {
 	if err != nil {
 		tester.Error("failed to capture command line output", err)
 	}
-	// splitting and extracting the output message to be checked
-	result := strings.Split(string(output), "\n")[1]
-	expected := "Successfully uploaded package: testdir/packages/openid-client-4.9.1.zip"
+	// extracting the output message to be checked
+	result := string(output)
+	expected := "Successfully uploaded package: testdir/packages/openid-client-4.9.1.zip\n"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
@@ -74,9 +74,9 @@ func TestAddPart(tester *testing.T) {
 		tester.Error("failed to capture command line output", err)
 	}
 	// splitting and extracting the output message to be checked
-	result := strings.Split(string(output), "\n")[1]
+	result := strings.Split(string(output), "\n")[0]
 	// saving the part id outputted for it to be deleted later
-	logical_part_id = strings.Fields(strings.Split(string(output), "\n")[3])[1]
+	logical_part_id = strings.Fields(strings.Split(string(output), "\n")[2])[1]
 	logical_part_id = logical_part_id[1 : len(logical_part_id)-2]
 	expected := "Successfully added part from: testdir/yml/busybox-1.35.0.yml"
 	if result != expected {
@@ -95,7 +95,7 @@ func TestQuery(tester *testing.T) {
 		tester.Error("failed to capture command line output", err)
 	}
 	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
-	result := strings.Fields(strings.Split(string(output), "\n")[3])[1]
+	result := strings.Fields(string(output))[4]
 	expected := "164880"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
@@ -114,7 +114,7 @@ func TestUpdate(tester *testing.T) {
 		tester.Error("failed to capture command line output", err)
 	}
 	// splitting and extracting the output message to be checked
-	result := strings.Split(string(output), "\n")[1]
+	result := strings.Split(string(output), "\n")[0]
 	expected := "Part successfully updated"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
@@ -132,7 +132,7 @@ func TestAddLicenseProfile(tester *testing.T) {
 		tester.Error("failed to capture command line output", err)
 	}
 	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
-	result := strings.Fields(strings.Split(string(output), "\n")[1])[0]
+	result := strings.Fields(string(output))[0]
 	expected := "Successfully"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
@@ -150,7 +150,7 @@ func TestAddSecurityProfile(tester *testing.T) {
 		tester.Error("failed to capture command line output", err)
 	}
 	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
-	result := strings.Fields(strings.Split(string(output), "\n")[1])[0]
+	result := strings.Fields(string(output))[0]
 	expected := "Successfully"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
@@ -168,7 +168,7 @@ func TestAddQualityProfile(tester *testing.T) {
 		tester.Error("failed to capture command line output", err)
 	}
 	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
-	result := strings.Fields(strings.Split(string(output), "\n")[1])[0]
+	result := strings.Fields(string(output))[0]
 	expected := "Successfully"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
@@ -185,9 +185,9 @@ func TestExportPart(tester *testing.T) {
 	if err != nil {
 		tester.Error("failed to capture command line output", err)
 	}
-	// splitting and extracting the output message to be checked
-	result := strings.Split(string(output), "\n")[1]
-	expected := "Part successfully exported to path: testdir/testpart.yml"
+	// extracting the output message to be checked
+	result := string(output)
+	expected := "Part successfully exported to path: testdir/testpart.yml\n"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
@@ -205,9 +205,9 @@ func TestExportTemplate(tester *testing.T) {
 	if err != nil {
 		tester.Error("failed to capture command line output", err)
 	}
-	// splitting and extracting the output message to be checked
-	result := strings.Split(string(output), "\n")[1]
-	expected := "Profile template successfully output to: testdir/testlicense.yml"
+	// extracting the output message to be checked
+	result := string(output)
+	expected := "Profile template successfully output to: testdir/testlicense.yml\n"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
@@ -226,7 +226,7 @@ func TestDelete(tester *testing.T) {
 		tester.Error("failed to capture command line output", err)
 	}
 	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
-	part_Id := strings.Fields(strings.Split(string(outputfind), "\n")[1])[2]
+	part_Id := strings.Fields(string(outputfind))[2]
 	// ccli delete --id <part-id>
 	cmd = exec.Command("ccli", "delete", "--id", part_Id)
 	// capturing command line output
@@ -234,11 +234,11 @@ func TestDelete(tester *testing.T) {
 	if err != nil {
 		tester.Error("failed to capture command line output", err)
 	}
-	// splitting and extracting the output message to be checked
+	// extracting the output message to be checked
 	// e.g., Hello World\nHi world
 	// split - Hi world
-	result := strings.Split(string(outputDeletePart1), "\n")[1]
-	expected := "Successfully deleted id: " + part_Id + " from catalog"
+	result := string(outputDeletePart1)
+	expected := "Successfully deleted id: " + part_Id + " from catalog\n"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
@@ -249,9 +249,9 @@ func TestDelete(tester *testing.T) {
 	if err != nil {
 		tester.Error("failed to capture command line output", err)
 	}
-	// splitting and extracting the output message to be checked
-	result = strings.Split(string(outputDeletePart2), "\n")[1]
-	expected = "Successfully deleted id: " + logical_part_id + " from catalog"
+	// extracting the output message to be checked
+	result = string(outputDeletePart2)
+	expected = "Successfully deleted id: " + logical_part_id + " from catalog\n"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}

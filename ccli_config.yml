@@ -1,0 +1,14 @@
+## Purpose: Configuration file for the ccli utility 
+##
+##
+## catalog address
+server_addr: "http://localhost/api/graphql"
+server_port: 80
+##
+## logging
+log_file: 'log.txt'
+log_level: 2
+##
+##
+## How much to indent the json format of an output file.
+json_indent: 2

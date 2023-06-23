@@ -46,13 +46,8 @@ var pingSubcommand *flag.FlagSet
 func init() {
 	configFile, err := os.Open("ccli_config.yml")
 	if err != nil {
-		fmt.Println("User configuration file not found, using default. Please copy ccli_config.DEFAULT.yml to ccli_config.yml.")
-	}
-	if configFile == nil {
-		configFile, err = os.Open("ccli_config.DEFAULT.yml")
-		if err != nil {
-			fmt.Printf("*** ERROR - Default configuration file not found: %s\n", err.Error())
-		}
+		fmt.Println("User configuration file not found. Please create ccli_config.yml and copy the contents of ccli_config.DEFAULT.yml.")
+		os.Exit(1)
 	}
 	defer configFile.Close()
 	data, err := io.ReadAll(configFile)
