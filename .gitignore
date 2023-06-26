@@ -3,10 +3,4 @@ ccli
 *.yaml
 log.txt
 !ccli_config.DEFAULT.yml
-!ccli_config.yml
-!busybox-1.35.0.yml
-!openid_license.yml
-!openid_quality.yml
-!openid_security.yml
-!openid-client-4.9.1.yml
 data/*

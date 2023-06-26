@@ -316,6 +316,9 @@ func UpdatePart(ctx context.Context, client *graphql.Client, partData *yaml.Part
 	if partData.Description != "" {
 		partInput.Description = partData.Description
 	}
+	if partData.HomePage != "" {
+		partInput.HomePage = partData.HomePage
+	}
 	if partData.ComprisedOf != "" {
 		comprisedID := UUID(partData.ComprisedOf)
 		partInput.Comprised = &comprisedID
@@ -364,6 +367,7 @@ func UnmarshalPart(part *Part, yamlPart *yaml.Part) error {
 	yamlPart.Type = part.PartType
 	yamlPart.Label = part.Label
 	yamlPart.Description = part.Description
+	yamlPart.HomePage = part.HomePage
 	yamlPart.License.LicenseExpression = part.License
 	yamlPart.License.AnalysisType = part.LicenseRationale
 	if part.Size != 0 {
@@ -386,6 +390,7 @@ func YamlToNewPartInput(yamlPart yaml.Part, newPartInput *NewPartInput) error {
 	newPartInput.License = yamlPart.License.LicenseExpression
 	newPartInput.LicenseRationale = yamlPart.License.AnalysisType
 	newPartInput.Description = yamlPart.Description
+	newPartInput.HomePage = yamlPart.HomePage
 	if yamlPart.ComprisedOf != "" {
 		comprisedUUID, err := uuid.Parse(yamlPart.ComprisedOf)
 		if err != nil {

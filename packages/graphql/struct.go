@@ -36,6 +36,7 @@ type Part struct {
 	License              string    `graphql:"license" yaml:"license"`
 	LicenseRationale     string    `graphql:"license_rationale" yaml:"license_rationale"`
 	Description          string    `graphql:"description" yaml:"description"`
+	HomePage             string    `graphql:"home_page" yaml:"home_page"`
 	Comprised            uuid.UUID `graphql:"comprised" yaml:"comprised"`
 	Aliases              []string  `graphql:"aliases" yaml:"aliases"`
 }
@@ -51,6 +52,7 @@ type PartInput struct {
 	License              string `graphql:"license" json:"license"`
 	LicenseRationale     string `graphql:"license_rationale" json:"license_rationale"`
 	Description          string `graphql:"description" json:"description"`
+	HomePage             string `graphql:"home_page" json:"home_page"`
 	Comprised            *UUID  `graphql:"comprised" json:"comprised"`
 }
 
@@ -63,6 +65,7 @@ type NewPartInput struct {
 	License          string `graphql:"license" json:"license"`
 	LicenseRationale string `graphql:"license_rationale" json:"license_rationale"`
 	Description      string `graphql:"description" json:"description"`
+	HomePage         string `graphql:"home_page" json:"home_page"`
 	Comprised        *UUID  `graphql:"comprised" json:"comprised"`
 }
 
