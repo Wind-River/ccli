@@ -1,0 +1,34 @@
+profile: "quality"
+format: 1.0
+fvc: "465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1"
+## ----------------------------------------------------
+##                 Bugs
+## ----------------------------------------------------
+bug_list:
+  ## -----------------
+  ## bug
+  ## -----------------
+  - name: "Bug 14376"
+    id: "14376"
+    description: |
+      Dummy bug
+    status: "Open"
+    level: "P5"
+    date: null
+    link: null
+    comments: null
+    references: null
+  ## -----------------
+  ## bug
+  ## -----------------
+  - name: "Bug 14536"
+    id: "14536"
+    description: |
+      Dummy
+    status: "Open"
+    level: "P5"
+    date: null
+    link: null
+    comments: |
+      This is a dummy quality profile
+    references: null

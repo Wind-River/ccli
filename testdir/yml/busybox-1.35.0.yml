@@ -1,0 +1,15 @@
+format: 1.0
+catalog_id: null
+name: "busybox"
+version: "1.35.0"
+type: "archive"
+family_name: "busybox"
+label: "busybox-1.35.0"
+description: |
+  Provides many of the Unix utilities in a single executable file.
+license: 
+  license_expression: "GPL-2.0"
+  analysis_type: "automation/topline/1.1"
+size: null
+comprised_of: null
+composite_list: null

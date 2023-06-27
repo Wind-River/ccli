@@ -11,6 +11,7 @@ type Part struct {
 	FamilyName  string  `yaml:"family_name"`
 	Label       string  `yaml:"label"`
 	Description string  `yaml:"description"`
+	HomePage    string  `yaml:"home_page"`
 	License     struct {
 		LicenseExpression string `yaml:"license_expression"`
 		AnalysisType      string `yaml:"analysis_type"`

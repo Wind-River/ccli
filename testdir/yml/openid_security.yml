@@ -1,0 +1,28 @@
+profile: 'security'
+format: 1.0
+fvc: "465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1"
+## ----------------------------------------------------
+##                 CVEs
+## ----------------------------------------------------
+cve_list:
+  ## cve
+  - cve_id: 'CVE-2022-30065'
+    description: |
+      Dummy profile
+    status: 'Open'
+    date: null
+    link: null
+    comments: |
+      patch is available
+    references: []
+  ## -----------------
+  ## cve
+  ## -----------------
+  - cve_id: 'CVE-2022-28391'
+    description: |
+      Dummy
+    status: 'open'
+    date: null
+    comments: null
+    link: null
+    references: []

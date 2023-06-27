@@ -1,0 +1,17 @@
+format: 1
+fvc: 465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1
+sha256: ""
+name: openid-client
+version: 4.9.1
+type: /archive
+family_name: ""
+label: updated openid-client-4.9.1
+description: ""
+license:
+    license_expression: ""
+    analysis_type: ""
+size: "164880"
+aliases: []
+comprised_of: ""
+composite_list: []
+home_page: "www.dummy.com"

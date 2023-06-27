@@ -12,6 +12,6 @@ require (
 require (
 	github.com/klauspost/compress v1.10.3 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	gitlab.devstar.cloud/WestStar/libraries/go/graphql-upload.git v0.4.0
+	gitlab.devstar.cloud/WestStar/libraries/go/graphql-upload.git v0.4.1
 	nhooyr.io/websocket v1.8.7 // indirect
 )
