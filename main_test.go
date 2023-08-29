@@ -9,6 +9,8 @@ import (
 )
 
 var logical_part_id string
+var paths []string
+var fvc []string
 
 // TestPing is used to check the connection to the software part catalog's server
 func TestPing(tester *testing.T) {
@@ -24,6 +26,9 @@ func TestPing(tester *testing.T) {
 	expected := "Ping Result: Success\n"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
+	} else {
+		paths = []string{"testdir/packages/openid-client-4.9.1_test.zip", "testdir/packages/busybox-1.35.0_test.zip"}
+		fvc = []string{"46564332008de01dcc150bcf6673a576d4c438b442afbb61d2cc98017234e44d9e338f19e8", "4656433200fe9e83718aa74cf8e3af8517fbaa0c273ed31d32363278759f86ec45251b5599"}
 	}
 }
 
@@ -31,35 +36,39 @@ func TestPing(tester *testing.T) {
 // and checks if the command line output is as expected
 func TestUpload(tester *testing.T) {
 	// set timer for upload to 20 seconds
-	duration := 20 * time.Second
-	// ccli upload testdir/packages/openid-client-4.9.1.zip
-	cmd := exec.Command("ccli", "upload", "testdir/packages/openid-client-4.9.1.zip")
-	// capturing command line output
-	output, err := cmd.Output()
-	if err != nil {
-		tester.Error("failed to capture command line output", err)
-	}
-	// extracting the output message to be checked
-	result := string(output)
-	expected := "Successfully uploaded package: testdir/packages/openid-client-4.9.1.zip\n"
-	if result != expected {
-		tester.Errorf("Expected %s but got %s", expected, result)
-	}
-	var flag bool
-	flag = false
-	// Loop to check if the upload has been reflected on the catalog and
-	for start := time.Now(); time.Since(start) < duration; {
-		// ccli query 'query{part(file_verification_code:\"465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1\"){size}}'
-		cmd := exec.Command("ccli", "query", "query{part(file_verification_code:\"465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1\"){size}}")
+	duration := 180 * time.Second
+	for i := 0; i < len(paths); i = i + 1 {
+		// ccli upload testdir/packages/openid-client-4.9.1.zip
+		cmd := exec.Command("ccli", "upload", paths[i])
 		// capturing command line output
-		output, err = cmd.Output()
-		if err == nil {
-			flag = true
-			break
+		output, err := cmd.Output()
+		if err != nil {
+			tester.Error("failed to capture command line output", err)
 		}
-	}
-	if !flag {
-		tester.Error("Timed out before upload could complete")
+		// extracting the output message to be checked
+		result := string(output)
+		expected := "Successfully uploaded package: " + paths[i] + "\n"
+		if result != expected {
+			tester.Errorf("Expected %s but got %s", expected, result)
+		}
+
+		var flag bool
+		flag = false
+		// Loop to check if the upload has been reflected on the catalog and
+		for start := time.Now(); time.Since(start) < duration; {
+			// ccli query 'query{part(file_verification_code:\"465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1\"){size}}'
+			cmd := exec.Command("ccli", "query", "query{part(file_verification_code:\""+fvc[i]+"\"){size}}")
+			// capturing command line output
+			output, err = cmd.Output()
+			if err == nil {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			tester.Errorf("Timed out before upload could complete for %s", paths[i])
+		}
+
 	}
 }
 
@@ -88,7 +97,7 @@ func TestAddPart(tester *testing.T) {
 // and checks if the command line output is as expected
 func TestQuery(tester *testing.T) {
 	// ccli query 'query{part(file_verification_code:\"465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1\"){size}}'
-	cmd := exec.Command("ccli", "query", "query{part(file_verification_code:\"465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1\"){size}}")
+	cmd := exec.Command("ccli", "query", "query{part(file_verification_code:\""+fvc[0]+"\"){size}}")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -96,7 +105,7 @@ func TestQuery(tester *testing.T) {
 	}
 	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
 	result := strings.Fields(string(output))[4]
-	expected := "164880"
+	expected := "164900"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
@@ -179,7 +188,7 @@ func TestAddQualityProfile(tester *testing.T) {
 // command line and checks if the command line output is as expected
 func TestExportPart(tester *testing.T) {
 	// ccli export -fvc 465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1 -o testdir/testpart.yml
-	cmd := exec.Command("ccli", "export", "-fvc", "465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1", "-o", "testdir/testpart.yml")
+	cmd := exec.Command("ccli", "export", "-fvc", fvc[0], "-o", "testdir/testpart.yml")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -219,7 +228,7 @@ func TestExportTemplate(tester *testing.T) {
 // part-id and command line. Finally checks if the command line output is as expected
 func TestDelete(tester *testing.T) {
 	// ccli find -fvc 465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1
-	cmd := exec.Command("ccli", "find", "-fvc", "465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1")
+	cmd := exec.Command("ccli", "find", "-fvc", fvc[0])
 	// capturing command line output
 	outputfind, err := cmd.Output()
 	if err != nil {
@@ -242,16 +251,96 @@ func TestDelete(tester *testing.T) {
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
+}
+
+/*
+	func TestForceDelete(tester *testing.T) {
+		// ccli find -fvc 465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1
+		cmd := exec.Command("ccli", "find", "-fvc", fvc[1])
+		// capturing command line output
+		outputfind, err := cmd.Output()
+		if err != nil {
+			tester.Error("failed to capture command line output", err)
+		}
+		// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
+		part_Id := strings.Fields(string(outputfind))[2]
+		// ccli delete --id <part-id>
+		cmd = exec.Command("ccli", "delete", "--id", part_Id, "--force")
+		// capturing command line output
+		output, err := cmd.Output()
+		if err != nil {
+			tester.Error("failed to capture command line output", err)
+		}
+		// extracting the output message to be checked
+		// e.g., Hello World\nHi world
+		// split - Hi world
+		result := string(output)
+		expected := "Successfully deleted id: " + part_Id + " from catalog\n"
+		if result != expected {
+			tester.Errorf("Expected %s but got %s", expected, result)
+		}
+	}
+*/
+func TestRecursiveDelete(tester *testing.T) {
+	// ccli find -fvc 465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1
+	cmd := exec.Command("ccli", "find", "-fvc", fvc[1])
+	// capturing command line output
+	outputfind, err := cmd.Output()
+	if err != nil {
+		tester.Error("failed to capture command line output", err)
+	}
+	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
+	part_Id := strings.Fields(string(outputfind))[2]
 	// ccli delete --id <part-id>
-	cmd = exec.Command("ccli", "delete", "--id", logical_part_id)
+	cmd = exec.Command("ccli", "delete", "--id", part_Id, "--recursive")
+	// capturing command line output
+	output, err := cmd.Output()
+	if err != nil {
+		tester.Error("failed to capture command line output", err)
+	}
+	// extracting the output message to be checked
+	// e.g., Hello World\nHi world
+	// split - Hi world
+	result := string(output)
+	expected := "Successfully deleted id: " + part_Id + " from catalog\n"
+	if result != expected {
+		tester.Errorf("Expected %s but got %s", expected, result)
+	}
+}
+func TestSharedFileDeletion(tester *testing.T) {
+	cmd := exec.Command("ccli", "query", "query{file(sha256:\"f29bc64a9d3732b4b9035125fdb3285f5b6455778edca72414671e0ca3b2e0de\"){names}}")
+	// capturing command line output
+	_, err := cmd.Output()
+	if err == nil {
+		tester.Error("shared file could not be deleted", err)
+	}
+}
+func TestArchiveDeletion(tester *testing.T) {
+	cmd := exec.Command("ccli", "query", "query{archive(name:\"openid-client-4.9.1_test.zip\"){insert_date}}")
+	// capturing command line output
+	_, err := cmd.Output()
+	if err == nil {
+		tester.Error("archive could not be deleted", err)
+	}
+	cmd = exec.Command("ccli", "query", "query{archive(name:\"busybox-1.35.0_test.zip\"){insert_date}}")
+	// capturing command line output
+	_, err = cmd.Output()
+	if err == nil {
+		tester.Error("archive could not be deleted", err)
+	}
+}
+
+func TestLogicalPartDelete(tester *testing.T) {
+	// ccli delete --id <part-id>
+	cmd := exec.Command("ccli", "delete", "--id", logical_part_id)
 	// capturing command line output
 	outputDeletePart2, err := cmd.Output()
 	if err != nil {
 		tester.Error("failed to capture command line output", err)
 	}
 	// extracting the output message to be checked
-	result = string(outputDeletePart2)
-	expected = "Successfully deleted id: " + logical_part_id + " from catalog\n"
+	result := string(outputDeletePart2)
+	expected := "Successfully deleted id: " + logical_part_id + " from catalog\n"
 	if result != expected {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}

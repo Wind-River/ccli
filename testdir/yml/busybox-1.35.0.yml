@@ -1,6 +1,6 @@
 format: 1.0
 catalog_id: null
-name: "busybox"
+name: "busybox_test"
 version: "1.35.0"
 type: "archive"
 family_name: "busybox"
