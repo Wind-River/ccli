@@ -31,13 +31,15 @@ func AddProfile(ctx context.Context, client *graphql.Client, id string, key stri
 }
 
 // Delete part from catalog - TODO - this should be difficult to execute
-func DeletePart(ctx context.Context, client *graphql.Client, id string) error {
+func DeletePart(ctx context.Context, client *graphql.Client, id string, recursiveDelete bool, forceDelete bool) error {
 	var mutation struct {
-		DeletePart bool `graphql:"deletePart(part_id: $id)"`
+		DeletePart bool `graphql:"deletePart(part_id: $id, recursive:$recursiveDelete, force:$forceDelete)"`
 	}
 
 	variables := map[string]interface{}{
-		"id": UUID(id),
+		"id":              UUID(id),
+		"recursiveDelete": recursiveDelete,
+		"forceDelete":     forceDelete,
 	}
 
 	if err := client.Mutate(ctx, &mutation, variables); err != nil {

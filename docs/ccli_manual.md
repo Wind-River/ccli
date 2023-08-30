@@ -53,9 +53,12 @@ $ ccli find -sha256 <sha256>
 ccli find -profile security -id werS12-da54FaSff-9U2aef
 ```
 - **delete**
---id <catalog_id> - deletes a part from the catalog using part id.
+--id <catalog_id> - deletes a part from the catalog using part id if the part has no related parts. Recursive flag can be used to delete a part and its sub-parts as long as they have no other related parts.
 ```
 ccli delete -id adjb23-A4D3faTa-d95Xufs
+```
+```
+ccli delete -id adjb23-A4D3faTa-d95Xufs --recursive
 ```
 
 ## Add

@@ -32,6 +32,8 @@ var argFVC string
 var argSearchQuery string
 var argTemplate string
 var argProfileType string
+var argRecursiveMode bool
+var argForcedMode bool
 
 var addSubcommand *flag.FlagSet
 var exportSubcommand *flag.FlagSet
@@ -169,7 +171,9 @@ func main() {
 	uploadSubcommand.BoolVar(&argVerboseMode, "v", false, "used to run ccli in verbose mode")
 
 	deleteSubcommand = flag.NewFlagSet("delete", flag.ExitOnError)
-	deleteSubcommand.StringVar(&argPartID, "id", "", "delete part from catalog using catalog id, ccli usage: --id <catalog_id>")
+	deleteSubcommand.StringVar(&argPartID, "id", "", "delete part from catalog using catalog id non recursively, ccli usage: --id <catalog_id>")
+	deleteSubcommand.BoolVar(&argRecursiveMode, "recursive", false, "delete part from catalog using catalog id recursively, ccli usage: --id <catalog_id> --recursive")
+	deleteSubcommand.BoolVar(&argForcedMode, "force", false, "delete part from catalog using catalog id forcefully, ccli usage: --id <catalog_id> --force")
 	deleteSubcommand.BoolVar(&argVerboseMode, "v", false, "used to run ccli in verbose mode")
 
 	pingSubcommand = flag.NewFlagSet("ping", flag.ExitOnError)
@@ -727,7 +731,7 @@ func main() {
 		}
 		if argPartID != "" {
 			log.Debug().Str("ID", argPartID).Msg("deleting part")
-			if err := graphql.DeletePart(context.Background(), client, argPartID); err != nil {
+			if err := graphql.DeletePart(context.Background(), client, argPartID, argRecursiveMode, argForcedMode); err != nil {
 				log.Fatal().Err(err).Msg("error deleting part from catalog")
 			}
 			fmt.Printf("Successfully deleted id: %s from catalog\n", argPartID)
