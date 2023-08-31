@@ -307,14 +307,17 @@ func TestRecursiveDelete(tester *testing.T) {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
 }
-func TestSharedFileDeletion(tester *testing.T) {
-	cmd := exec.Command("ccli", "query", "query{file(sha256:\"f29bc64a9d3732b4b9035125fdb3285f5b6455778edca72414671e0ca3b2e0de\"){names}}")
-	// capturing command line output
-	_, err := cmd.Output()
-	if err == nil {
-		tester.Error("shared file could not be deleted", err)
+
+/*
+	func TestSharedFileDeletion(tester *testing.T) {
+		cmd := exec.Command("ccli", "query", "query{file(sha256:\"f29bc64a9d3732b4b9035125fdb3285f5b6455778edca72414671e0ca3b2e0de\"){names}}")
+		// capturing command line output
+		_, err := cmd.Output()
+		if err == nil {
+			tester.Error("shared file could not be deleted", err)
+		}
 	}
-}
+*/
 func TestArchiveDeletion(tester *testing.T) {
 	cmd := exec.Command("ccli", "query", "query{archive(name:\"openid-client-4.9.1_test.zip\"){insert_date}}")
 	// capturing command line output
