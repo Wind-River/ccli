@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"wrs/catalog/ccli/packages/yaml"
 
+	graphqlUpload "bitbucket.wrs.com/scm/weststar/graphql-upload-go.git/code"
 	"github.com/google/uuid"
 	"github.com/hasura/go-graphql-client"
-	graphqlUpload "gitlab.devstar.cloud/WestStar/libraries/go/graphql-upload.git/code"
 )
 
 // Adds a profile document to a part and returns any errors that occur
