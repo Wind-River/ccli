@@ -4,6 +4,7 @@ sha256: ""
 name: openid-client_test
 version: 4.9.1
 type: /archive
+content_type: OSS
 family_name: ""
 label: updated openid-client-4.9.1
 description: ""

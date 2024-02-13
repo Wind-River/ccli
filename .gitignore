@@ -4,3 +4,4 @@ ccli
 log.txt
 !ccli_config.DEFAULT.yml
 data/*
+ccli_config.yml

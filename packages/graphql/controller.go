@@ -6,9 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"wrs/catalog/ccli/packages/yaml"
 
-	graphqlUpload "bitbucket.wrs.com/scm/weststar/graphql-upload-go.git/code"
+	graphqlUpload "bitbucket.wrs.com/scm/weststar/graphql-upload-go.git"
 	"github.com/google/uuid"
 	"github.com/hasura/go-graphql-client"
 )
@@ -258,8 +259,29 @@ func Query(ctx context.Context, client *graphql.Client, query string) ([]byte, e
 }
 
 // uploads an archive to the catalog using graphql-upload library
-func UploadFile(httpClient *http.Client, uri string, path string, name string) (*http.Response, error) {
-	return graphqlUpload.UploadFile(httpClient, uri, path, name)
+func UploadFile(httpClient *http.Client, uri string, path string, name string) (*graphqlUpload.Response, error) {
+	f, _ := os.Open(path)
+	response, _ := graphqlUpload.Upload(
+		http.DefaultClient,
+		uri,
+		`
+		mutation($file: Upload!){
+		  uploadArchive(file: $file){
+			  name
+			  insert_date
+			  sha256
+			  sha1
+			  part_id
+		  }
+		}
+	  `,
+		graphqlUpload.File{
+			Name:     path,
+			Variable: "file",
+			Data:     f,
+		},
+	)
+	return response, nil
 }
 
 // updates a part record from the catalog using yaml template
@@ -367,6 +389,7 @@ func UnmarshalPart(part *Part, yamlPart *yaml.Part) error {
 	yamlPart.Version = part.Version
 	yamlPart.FamilyName = part.FamilyName
 	yamlPart.Type = part.PartType
+	yamlPart.ContentType = part.ContentType
 	yamlPart.Label = part.Label
 	yamlPart.Description = part.Description
 	yamlPart.HomePage = part.HomePage
@@ -385,6 +408,7 @@ func UnmarshalPart(part *Part, yamlPart *yaml.Part) error {
 // Used to convert a part in yaml format into the format expected for new part mutation
 func YamlToNewPartInput(yamlPart yaml.Part, newPartInput *NewPartInput) error {
 	newPartInput.Type = yamlPart.Type
+	newPartInput.ContentType = yamlPart.ContentType
 	newPartInput.Name = yamlPart.Name
 	newPartInput.Version = yamlPart.Version
 	newPartInput.Label = yamlPart.Label

@@ -8,6 +8,7 @@ type Part struct {
 	Name        string  `yaml:"name"`
 	Version     string  `yaml:"version"`
 	Type        string  `yaml:"type"`
+	ContentType string  `yaml:"content_type"`
 	FamilyName  string  `yaml:"family_name"`
 	Label       string  `yaml:"label"`
 	Description string  `yaml:"description"`

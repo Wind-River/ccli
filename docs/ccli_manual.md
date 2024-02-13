@@ -4,34 +4,34 @@ We present an overview and user manual for the Catalog Command Line interface (c
 operations on the Software Parts Catalog (SPC) such as adding new and updating parts and part profiles, uploading archives, and retrieving part and profile data.
 The following operations are supported:
 
-- **add** --part <file.yml> - adds a new part record to the catalog. See the 'add' section below for the format the required yml file. For example:
+- **add** part <file.yml> - adds a new part record to the catalog. See the 'add' section below for the format the required yml file. For example:
 ```
-$ ccli add --part openssl-1.1.1n.yml
+$ ccli add part openssl-1.1.1n.yml
 ```
-- **add** --profile <file.yml> - adds a new part profile document to the catalog. See the 'add' section below for the format the required yml file. For example:
+- **add** profile <file.yml> - adds a new part profile document to the catalog. See the 'add' section below for the format the required yml file. For example:
 ```
-$ ccli add --profile profile_openssl-1.1.1n.yml
+$ ccli add profile profile_openssl-1.1.1n.yml
 ```
 - **query** <string> - enables one to query the catalog for part data. For example:
 ```
 $ ccli query '...'
 ```
 - **export** 
---fvc <file_verification_code>| --sha256 \<Sha256>| --id <catalog_id> -o <file.yml>
+part fvc <file_verification_code>| sha256 \<Sha256>| id <catalog_id> -o <file.yml>
 Export out data for a given part. 
 ```
-  $ ccli export --id sdl3ga-naTs42g5-rbow2A -o file.yml
+  $ ccli export part id sdl3ga-naTs42g5-rbow2A -o file.yml
 ```
 - **export** 
---template <part | security | quality | licensing> -o <Path.yaml>
+template <part | security | quality | licensing> -o <Path.yaml>
 Export template for part or profile
 ```
-ccli export --template security -o file.yml
+ccli export template security -o file.yml
 ```
-- **update** --part <file.yml> - enables one to update selective data fields of a part record. See the 'update' section below for the format the 
+- **update** <file.yml> - enables one to update selective data fields of a part record. See the 'update' section below for the format the 
 required yml file. For example:
 ```
-$ ccli update --part openssl-1.1.1n.v4.yml
+$ ccli update openssl-1.1.1n.v4.yml
 ```
 -  **upload** <source archive> - uploads the specified source archive. A a new part record will be created if it does not correspond part record exists otherwise
 it will be associated with an existing part if it already exists.  
@@ -39,26 +39,26 @@ it will be associated with an existing part if it already exists.
 $ ccli upload openssl-1.1.1n.tar.gz
 ```
 - **find** 
---part \<query> - searches catalog for matching part names and displays corresponding data
---id \<catalog_id> - retrieves a part from catalog using id
---sha256 \<sha256> - returns part id using given sha256
---fvc \<file_verification_code> - returns part id using given file verification code
+part \<query> - searches catalog for matching part names and displays corresponding data
+id \<catalog_id> - retrieves a part from catalog using id
+sha256 \<sha256> - returns part id using given sha256
+fvc \<file_verification_code> - returns part id using given file verification code
 ```
-$ ccli find -part busybox
-$ ccli find -sha256 <sha256>
+$ ccli find part busybox
+$ ccli find sha256 <sha256>
 ```
 - **find**
---profile <security|quality|licensing> -id <catalog_id> - retrieves a profile from the catalog based on type and part id.
+profile <security|quality|licensing> <catalog_id> - retrieves a profile from the catalog based on type and part id.
 ```
-ccli find -profile security -id werS12-da54FaSff-9U2aef
+ccli find profile security werS12-da54FaSff-9U2aef
 ```
 - **delete**
---id <catalog_id> - deletes a part from the catalog using part id if the part has no related parts. Recursive flag can be used to delete a part and its sub-parts as long as they have no other related parts.
+ <catalog_id> - deletes a part from the catalog using part id if the part has no related parts. Recursive flag can be used to delete a part and its sub-parts as long as they have no other related parts.
 ```
-ccli delete -id adjb23-A4D3faTa-d95Xufs
+ccli deleteadjb23-A4D3faTa-d95Xufs
 ```
 ```
-ccli delete -id adjb23-A4D3faTa-d95Xufs --recursive
+ccli delete adjb23-A4D3faTa-d95Xufs --recursive
 ```
 
 ## Add
