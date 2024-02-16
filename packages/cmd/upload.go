@@ -25,26 +25,31 @@ import (
 // Upload() uses the graphql upload library to upload
 // an archive present at the given path.
 func Upload(configFile *config.ConfigData) *cobra.Command {
+	// cobra command for upload
 	uploadCmd := &cobra.Command{
 		Use:   "upload [path]",
 		Short: "Upload an archive to the Software Parts Catalog",
+		// function to be run as setup for command execution
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				return errors.New("No path provided.\nUsage: ccli upload <path to file>")
+				return errors.New("No path provided.")
 			}
 			return nil
 		},
+		// function to be run during command execution
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argPath := args[0]
 			if argPath == "" {
 				return errors.New("error executing upload, upload subcommand usage: ccli upload <Path>")
 			}
+			// check if the file path is present and upload it to the catalog
 			if argPath != "" {
 				slog.Debug("uploading file to server")
 				response, err := graphql.UploadFile(http.DefaultClient, configFile.ServerAddr, argPath, "")
 				if err != nil {
 					return errors.Wrapf(err, "error uploading archive")
 				}
+				// check if the response is present
 				if response.Data != nil {
 					fmt.Printf("Successfully uploaded package: %s\n", argPath)
 				}

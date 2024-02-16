@@ -31,20 +31,25 @@ import (
 func Delete(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	var argForcedMode bool
 	var argRecursiveMode bool
+	// cobra command for delete
 	deleteCmd := &cobra.Command{
 		Use:   "delete [part id]",
 		Short: "Delete a part in the Software Parts Catalog.",
+		// function to run as a setup on command execution
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				return errors.New("No part id provided.\nUsage: ccli delete <part id>")
+				return errors.New("No part id provided.")
 			}
 			return nil
 		},
+		// function to run on command execution
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// check if the part id is provided as an argument
 			argPartID := args[0]
 			if argPartID == "" {
 				return errors.New("error deleting part, delete subcommand usage: ./ccli delete <catalog_id>")
 			}
+			// delete the part if the part id is present
 			if argPartID != "" {
 				slog.Debug("deleting part", slog.String("ID", argPartID))
 				if err := graphql.DeletePart(context.Background(), client, argPartID, argRecursiveMode, argForcedMode); err != nil {
@@ -55,6 +60,7 @@ func Delete(configFile *config.ConfigData, client *graph.Client, indent string) 
 			return nil
 		},
 	}
+	// adding persistent flags for delete i.e. recursive and force
 	deleteCmd.PersistentFlags().BoolVarP(&argRecursiveMode, "recursive", "r", false, "To delete parts recursively")
 	deleteCmd.PersistentFlags().BoolVarP(&argForcedMode, "force", "f", false, "To delete parts forcefully")
 	return deleteCmd

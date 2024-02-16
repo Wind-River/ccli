@@ -19,14 +19,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// struct for storing config file data
 type ConfigData struct {
 	ServerAddr string `mapstructure:"server_addr"`
-	ServerPort int64  `mapstructure:"server_port"`
 	LogFile    string `mapstructure:"log_file"`
 	LogLevel   int64  `mapstructure:"log_level"`
 	JsonIndent int64  `mapstructure:"json_indent"`
 }
 
+// struct for storing io.writer
 type LogWriter struct {
 	Stdout *os.File
 	File   *os.File
@@ -34,10 +35,12 @@ type LogWriter struct {
 
 // Write implements io.Writer.
 func (logWriter *LogWriter) Write(p []byte) (n int, err error) {
+	// io.writer for stdout
 	n, err = logWriter.Stdout.Write(p)
 	if err != nil {
 		return n, errors.Wrapf(err, "Could not write to stdout")
 	}
+	// io.writer for a given file
 	n, err = logWriter.File.Write(p)
 	return n, errors.Wrapf(err, "Could not write to log file")
 }

@@ -21,8 +21,10 @@ import (
 var DefaultClient *http.Client
 
 func init() {
+	// creating a default http client
 	DefaultClient = &http.Client{
 		Transport: &http.Transport{
+			// ignore verification for self signed certificates
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}

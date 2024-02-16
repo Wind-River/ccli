@@ -20,10 +20,13 @@ import (
 // Example() displays a number of potential calls
 // that can be made using the ccli.
 func Example() *cobra.Command {
+	// cobra command for examples
 	exampleCmd := &cobra.Command{
 		Use:   "examples",
 		Short: "Ccli is used to interact with the Software Parts Catalog.",
+		// function to be run on command execution
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// list of all the ccli examples that can be executed
 			exampleString :=
 				`	$ ccli add part openssl-1.1.1n.yml
 	$ ccli add profile profile_openssl-1.1.1n.yml

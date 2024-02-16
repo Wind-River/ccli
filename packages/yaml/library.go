@@ -19,14 +19,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Marshal() gives the yaml encoding of the data
 func Marshal(in interface{}) ([]byte, error) {
 	return yaml.Marshal(in)
 }
 
+// Unmarshal() parses the yaml encoded data
 func Unmarshal(in []byte, out interface{}) error {
 	return yaml.Unmarshal(in, out)
 }
 
+// NewDecoder() gives a new decoder which read from the io.reader
 func NewDecoder(r io.Reader) *yaml.Decoder {
 	return yaml.NewDecoder(r)
 }

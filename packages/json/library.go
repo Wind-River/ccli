@@ -19,14 +19,17 @@ import (
 
 type RawMessage json.RawMessage
 
+// Marshal() gives the json encoding of the data
 func Marshal(v any) ([]byte, error) {
 	return json.Marshal(v)
 }
 
+// Unmarshal() parses the json encoded data
 func Unmarshal(data []byte, v any) error {
 	return json.Unmarshal(data, v)
 }
 
+// MarshalIndent() also gives the json encoding of the data in indented format
 func MarshalIndent(v any, prefix string, indent string) ([]byte, error) {
 	return json.MarshalIndent(v, prefix, indent)
 }

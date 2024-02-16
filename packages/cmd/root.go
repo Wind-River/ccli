@@ -25,25 +25,33 @@ import (
 // message advising the user to add sub commands
 func RootCmd(configFile *config.ConfigData, logWriter *config.LogWriter) *cobra.Command {
 	var verboseFlag bool
+	// cobra command for root ccli
 	rootCmd := &cobra.Command{
 		Use:   "ccli",
 		Short: "Ccli is used to interact with the Software Parts Catalog.",
+		// function which is always to be reun before command execution
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// check if the verbose flag is on
 			if verboseFlag {
+				// create ne logger options and level
 				slogOptions := new(slog.HandlerOptions)
 				slogOptions.Level = slog.LevelDebug
+				// if the log level is 2, add he source information to the options
 				if configFile.LogLevel == 2 {
 					slogOptions.AddSource = true
 				}
+				// set a new default for logging
 				slog.SetDefault(slog.New(slog.NewJSONHandler(logWriter, slogOptions)))
 			}
 			return nil
 		},
+		// function to be run during command execution
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return errors.New("Please provide a sub-command to be executed. Refer to the examples by running ccli examples or use help for more information.")
 
 		},
 	}
+	// add a flag to the root command for having a verbose value
 	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "To Execute commands in verbose mode")
 	return rootCmd
 }

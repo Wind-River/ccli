@@ -13,6 +13,7 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -34,32 +35,30 @@ func init() {
 	// set the config file and its path
 	viper.SetConfigFile("ccli_config.yml")
 	viper.AddConfigPath(".")
-	// create a default slog logger which logs to stdout
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{})))
 	// read the config file
 	if err := viper.ReadInConfig(); err != nil {
 		if err != nil {
 			if err != errors.New("open ccli_config.yml: no such file or directory") {
-				slog.Error("User configuration file not found. Please create ccli_config.yml and copy the contents of ccli_config.DEFAULT.yml.")
+				fmt.Println("User configuration file not found. Please create ccli_config.yml and copy the contents of ccli_config.DEFAULT.yml.")
 			} else {
-				slog.Error("Error reading in config file", slog.Any("error", err))
+				fmt.Println("Error reading in config file. Error:", err)
 			}
 			os.Exit(1)
 		}
 	}
 	// unmarshal the config file parameters to a struct
 	if err := viper.Unmarshal(&configFile); err != nil {
-		slog.Error("Could not unmarshal config file parameters")
+		fmt.Println("Could not unmarshal config file parameters")
 		os.Exit(1)
 	}
 	// check if the log file is present and has the correct extension
 	if configFile.LogFile == "" || configFile.LogFile[len(configFile.LogFile)-4:] != ".txt" {
-		slog.Error("*** ERROR - Error reading config file, log file must be a .txt file")
+		fmt.Println("*** ERROR - Error reading config file, log file must be a .txt file")
 		os.Exit(1)
 	}
 	// check if the log level is accurate
 	if configFile.LogLevel > 2 || configFile.LogLevel < 1 {
-		slog.Error("*** ERROR - Error reading log level, log level must be either 1 or 2")
+		fmt.Println("*** ERROR - Error reading log level, log level must be either 1 or 2")
 		os.Exit(1)
 	}
 	indentString := ""
@@ -72,25 +71,25 @@ func init() {
 func main() {
 	// check if the server address is provided
 	if configFile.ServerAddr == "" {
-		slog.Error("invalid configuration file, no server address located")
+		fmt.Println("invalid configuration file, no server address located")
 		os.Exit(1)
 	}
 	// contact the given server
 	resp, err := http.DefaultClient.Get(configFile.ServerAddr)
 	if err != nil {
-		slog.Error("error contacting server", slog.Any("error:", err))
+		fmt.Println("error contacting server", slog.Any("error:", err))
 		os.Exit(1)
 	}
 	resp.Body.Close()
 	// check if the response suggets a successful connection to the server
 	if resp.StatusCode != 200 && resp.StatusCode != 422 {
-		slog.Error("server connection error, check config file and network configuration", slog.Int("Status Code:", resp.StatusCode))
+		fmt.Println("server connection error, check config file and network configuration", slog.Int("Status Code:", resp.StatusCode))
 		os.Exit(1)
 	}
 	// create the log file or truncate it if already present
 	logFile, err := os.Create(configFile.LogFile)
 	if err != nil {
-		slog.Error("*** ERROR - Error opening log file:", slog.Any("error", err))
+		fmt.Println("*** ERROR - Error opening log file. Error:", err)
 		os.Exit(1)
 	}
 	// create a new log writer for writing to the log file and stdout simultaneously

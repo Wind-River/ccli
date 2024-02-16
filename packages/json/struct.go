@@ -13,6 +13,7 @@ package json
 
 import "encoding/json"
 
+// struct for storing profile data
 type Profile struct {
 	Profile   string  `json:"profile"`
 	Label     string  `json:"label"`
@@ -24,6 +25,7 @@ type Profile struct {
 	CatalogID string  `json:"catalog_id,omitempty"`
 }
 
+// struct for storing License profile data
 type MainProfile struct {
 	Profile
 	InsertDate       string          `json:"insert_date,omitempty"`
@@ -35,6 +37,7 @@ type MainProfile struct {
 	CompositeList    []string        `json:"composite_list,omitempty"`
 }
 
+// struct for storing security profile data
 type SecurityProfile struct {
 	Profile
 	CVEList []struct {
@@ -47,6 +50,7 @@ type SecurityProfile struct {
 	} `json:"cve_list"`
 }
 
+// struct for storing quality profile data
 type QualityProfile struct {
 	Profile
 	BugList []struct {
@@ -60,6 +64,7 @@ type QualityProfile struct {
 	} `json:"bug_list"`
 }
 
+// struct for storing collection of profiles
 type ProfileCollection struct {
 	MainProfile
 	SecurityProfile    *SecurityProfile

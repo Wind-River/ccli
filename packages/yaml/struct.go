@@ -11,6 +11,7 @@
 // OR CONDITIONS OF ANY KIND, either express or implied.
 package yaml
 
+// struct for storing part data
 type Part struct {
 	Format      float64 `yaml:"format"`
 	FVC         string  `yaml:"fvc"`
@@ -34,6 +35,7 @@ type Part struct {
 	CompositeList []string `yaml:"composite_list"`
 }
 
+// struct for storing profile data
 type Profile struct {
 	Profile   string  `yaml:"profile"`
 	Format    float64 `yaml:"format"`

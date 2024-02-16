@@ -30,42 +30,52 @@ import (
 // Update() is a sub command responsible for updating part information
 // based on a given yml file.
 func Update(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
-	uploadCmd := &cobra.Command{
+	// cobra command for update
+	updateCmd := &cobra.Command{
 		Use:   "update [path]",
 		Short: "Update a part in the Software Parts Catalog",
+		// function to be run as setup for the command execution
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			// check if exactly 1 argument is present
 			if len(args) < 1 {
-				return errors.New("No path provided.\nUsage: ccli update <path to file>")
+				return errors.New("No path provided.")
 			}
 			return nil
 		},
+		// function to be run during command execution
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argImportPath := args[0]
 			if argImportPath == "" {
 				return errors.New("error updating part, update subcommand usage: ./ccli update <Path>")
 			}
+			// check if the file is of yaml/yml format
 			if argImportPath != "" {
 				if argImportPath[len(argImportPath)-5:] != ".yaml" && argImportPath[len(argImportPath)-4:] != ".yml" {
 					return errors.New("error importing part, import path not a yaml file")
 				}
+				// open the file
 				f, err := os.Open(argImportPath)
 				if err != nil {
 					return errors.Wrapf(err, "error opening file")
 				}
 				defer f.Close()
+				// read all the data from the file
 				data, err := io.ReadAll(f)
 				if err != nil {
 					return errors.Wrapf(err, "error reading file")
 				}
+				// unmarshal the data of the file into a struct
 				var partData yaml.Part
 				if err = yaml.Unmarshal(data, &partData); err != nil {
 					return errors.Wrapf(err, "error decoding file contents")
 				}
 				slog.Debug("updating part")
+				// update the part with the given part data
 				returnPart, err := graphql.UpdatePart(context.Background(), client, &partData)
 				if err != nil {
 					return errors.Wrapf(err, "error updating part")
 				}
+				// marshal the struct into a json
 				prettyJson, err := json.MarshalIndent(&returnPart, "", indent)
 				if err != nil {
 					return errors.Wrapf(err, "error prettifying json")
@@ -75,6 +85,6 @@ func Update(configFile *config.ConfigData, client *graph.Client, indent string) 
 			return nil
 		},
 	}
-	return uploadCmd
+	return updateCmd
 
 }
