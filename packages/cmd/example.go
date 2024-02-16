@@ -1,23 +1,29 @@
+// Copyright (c) 2020 Wind River Systems, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software  distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+// OR CONDITIONS OF ANY KIND, either express or implied.
 package cmd
 
 import (
 	"fmt"
-	"wrs/catalog/ccli/packages/config"
 
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
 
-func Example(configFile *config.ConfigData) *cobra.Command {
-	var verboseFlag bool
-	rootCmd := &cobra.Command{
-		Use:   "ccli",
+// Example() displays a number of potential calls
+// that can be made using the ccli.
+func Example() *cobra.Command {
+	exampleCmd := &cobra.Command{
+		Use:   "examples",
 		Short: "Ccli is used to interact with the Software Parts Catalog.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if verboseFlag {
-				zerolog.SetGlobalLevel(0)
-			}
-			fmt.Println("Please provide a command to be executed. Refer to the following examples and use help for more information.")
 			exampleString :=
 				`	$ ccli add part openssl-1.1.1n.yml
 	$ ccli add profile profile_openssl-1.1.1n.yml
@@ -30,12 +36,10 @@ func Example(configFile *config.ConfigData) *cobra.Command {
 	$ ccli find sha256 2493347f59c03...
 	$ ccli find profile security werS12-da54FaSff-9U2aef
 	$ ccli delete adjb23-A4D3faTa-d95Xufs
-	$ ccli ping
-	$ ccli `
+	$ ccli ping`
 			fmt.Printf("%s\n", exampleString)
 			return nil
 		},
 	}
-	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "To Execute commands in verbose mode")
-	return rootCmd
+	return exampleCmd
 }

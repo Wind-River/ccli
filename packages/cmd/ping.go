@@ -1,30 +1,39 @@
+// Copyright (c) 2020 Wind River Systems, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software  distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+// OR CONDITIONS OF ANY KIND, either express or implied.
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"wrs/catalog/ccli/packages/config"
 	"wrs/catalog/ccli/packages/http"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"log/slog"
+
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
+// Ping() makes a call to the catalog server and checks if the catalog server
+// is responding and ready for further api calls.
 func Ping(configFile *config.ConfigData) *cobra.Command {
 	return &cobra.Command{
 		Use:   "ping",
 		Short: "Ping the Catalog server for the current time",
 		Args:  cobra.MinimumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			if configFile.ServerAddr == "" {
 				return errors.New("invalid configuration file, no server address located")
 			}
-			log.Debug().Str("Address", configFile.ServerAddr).Msg("pinging server")
+			slog.Debug("Pinging server", slog.String("Address", configFile.ServerAddr))
 			resp, err := http.DefaultClient.Get(configFile.ServerAddr)
 			if err != nil {
 				return errors.New("error contacting server")

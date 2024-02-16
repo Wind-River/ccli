@@ -1,4 +1,5 @@
 ccli
+ccli.exe
 *.yml
 *.yaml
 log.txt

@@ -1,21 +1,31 @@
+// Copyright (c) 2020 Wind River Systems, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software  distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+// OR CONDITIONS OF ANY KIND, either express or implied.
 package cmd
 
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"wrs/catalog/ccli/packages/config"
 	"wrs/catalog/ccli/packages/graphql"
 
 	graph "github.com/hasura/go-graphql-client"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
+// Find() handles the command for getting a part based on various aspects.
 func Find(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	findCmd := &cobra.Command{
 		Use:   "find",
@@ -32,9 +42,10 @@ func Find(configFile *config.ConfigData, client *graph.Client, indent string) *c
 	return findCmd
 }
 
+// FindPart() handles finding a part based on a search query/part name
 func FindPart(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	findPartCmd := &cobra.Command{
-		Use:   "part",
+		Use:   "part [search query]",
 		Short: "Find a part using the name(i.e. search query)",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
@@ -43,21 +54,17 @@ func FindPart(configFile *config.ConfigData, client *graph.Client, indent string
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argSearchQuery := args[0]
 			if argSearchQuery != "" {
-				log.Debug().Str("Query", argSearchQuery).Msg("executing part search")
+				slog.Debug("executing part search", slog.String("Query", argSearchQuery))
 				response, err := graphql.Search(context.Background(), client, argSearchQuery)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error searching for part")
+					return errors.Wrapf(err, "error searching for part")
 				}
 
 				prettyJson, err := json.MarshalIndent(response, "", indent)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error prettifying json")
+					return errors.Wrapf(err, "error prettifying json")
 				}
 				fmt.Printf("Result: %s\n", string(prettyJson))
 			}
@@ -67,9 +74,10 @@ func FindPart(configFile *config.ConfigData, client *graph.Client, indent string
 	return findPartCmd
 }
 
+// FindId() handles finding a part based on part id
 func FindId(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	findIdCmd := &cobra.Command{
-		Use:   "id",
+		Use:   "id [part id]",
 		Short: "Find a part using the part id",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
@@ -78,20 +86,16 @@ func FindId(configFile *config.ConfigData, client *graph.Client, indent string) 
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argPartID := args[0]
 			if argPartID != "" {
-				log.Debug().Str("ID", argPartID).Msg("retrieving part by id")
+				slog.Debug("retrieving part by id", slog.String("ID", argPartID))
 				response, err := graphql.GetPartByID(context.Background(), client, argPartID)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error getting part by id")
+					return errors.Wrapf(err, "error getting part by id")
 				}
 				prettyJson, err := json.MarshalIndent(&response, "", indent)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error prettifying json")
+					return errors.Wrapf(err, "error prettifying json")
 				}
 				fmt.Printf("%s\n", string(prettyJson))
 			}
@@ -100,9 +104,11 @@ func FindId(configFile *config.ConfigData, client *graph.Client, indent string) 
 	}
 	return findIdCmd
 }
+
+// FindSha() handles finding a part based on part sha256
 func FindSha(configFile *config.ConfigData, client *graph.Client) *cobra.Command {
 	findShaCmd := &cobra.Command{
-		Use:   "sha256",
+		Use:   "sha256 [sha256]",
 		Short: "Find a part using the Sha256",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
@@ -111,16 +117,12 @@ func FindSha(configFile *config.ConfigData, client *graph.Client) *cobra.Command
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argSHA256 := args[0]
 			if argSHA256 != "" {
-				log.Debug().Str("SHA256", argSHA256).Msg("retrieving part id by sha256")
+				slog.Debug("retrieving part id by sha256", slog.String("SHA256", argSHA256))
 				partID, err := graphql.GetPartIDBySha256(context.Background(), client, argSHA256)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error retrieving part id")
+					return errors.Wrapf(err, "error retrieving part id")
 				}
 				fmt.Printf("Part ID: %s \n", partID.String())
 			}
@@ -129,9 +131,11 @@ func FindSha(configFile *config.ConfigData, client *graph.Client) *cobra.Command
 	}
 	return findShaCmd
 }
+
+// FindFvc() handles finding a part based on part file verification code
 func FindFvc(configFile *config.ConfigData, client *graph.Client) *cobra.Command {
 	findFvcCmd := &cobra.Command{
-		Use:   "fvc",
+		Use:   "fvc [fvc]",
 		Short: "Find a part using the file verification code",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
@@ -140,16 +144,12 @@ func FindFvc(configFile *config.ConfigData, client *graph.Client) *cobra.Command
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argFVC := args[0]
 			if argFVC != "" {
-				log.Debug().Str("File Verification Code", argFVC).Msg("retrieving part id by file verification code")
+				slog.Debug("retrieving part id by file verification code", slog.String("File Verification Code", argFVC))
 				partID, err := graphql.GetPartIDByFVC(context.Background(), client, argFVC)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error retrieving part id")
+					return errors.Wrapf(err, "error retrieving part id")
 				}
 				fmt.Printf("Part ID: %s \n", partID.String())
 			}
@@ -158,9 +158,12 @@ func FindFvc(configFile *config.ConfigData, client *graph.Client) *cobra.Command
 	}
 	return findFvcCmd
 }
+
+// FindProfile() handles finding a specific type of part profile
+// using its part id.
 func FindProfile(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	findProfileCmd := &cobra.Command{
-		Use:   "profile",
+		Use:   "profile [profile type] [part id]",
 		Short: "Find the specific profile of a given part using its profile type and part id",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 2 {
@@ -169,20 +172,16 @@ func FindProfile(configFile *config.ConfigData, client *graph.Client, indent str
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argProfileType := args[0]
 			argPartID := args[1]
 			if argProfileType != "" {
 				if argPartID == "" {
-					log.Fatal().Msg("error getting profile, missing part id")
+					return errors.New("error getting profile, missing part id")
 				}
-				log.Debug().Str("ID", argPartID).Str("Key", argProfileType).Msg("retrieving profile")
+				slog.Debug("retrieving profile", slog.String("ID", argPartID), slog.String("Key", argProfileType))
 				profile, err := graphql.GetProfile(context.Background(), client, argPartID, argProfileType)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error retrieving profile")
+					return errors.Wrapf(err, "error retrieving profile")
 				}
 				if len(*profile) < 1 {
 					fmt.Println("No documents found")
@@ -190,7 +189,7 @@ func FindProfile(configFile *config.ConfigData, client *graph.Client, indent str
 				}
 				prettyJson, err := json.MarshalIndent(&profile, "", indent)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error prettifying json")
+					return errors.Wrapf(err, "error prettifying json")
 				}
 				fmt.Printf("%s\n", string(prettyJson))
 				os.Exit(0)

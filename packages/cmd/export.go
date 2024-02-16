@@ -1,21 +1,32 @@
+// Copyright (c) 2020 Wind River Systems, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software  distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+// OR CONDITIONS OF ANY KIND, either express or implied.
 package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"wrs/catalog/ccli/packages/config"
 	"wrs/catalog/ccli/packages/graphql"
 	"wrs/catalog/ccli/packages/yaml"
 
 	graph "github.com/hasura/go-graphql-client"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
+// Export() handles getting a part or a template and
+// saving it out to a file on the given path
 func Export(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	var output string
 	exportCmd := &cobra.Command{
@@ -31,6 +42,8 @@ func Export(configFile *config.ConfigData, client *graph.Client, indent string) 
 	return exportCmd
 }
 
+// ExportPart() is a sub command and handles the download
+// of part data and writing to a file on a given path
 func ExportPart(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportPartCmd := &cobra.Command{
 		Use:   "part",
@@ -46,9 +59,10 @@ func ExportPart(configFile *config.ConfigData, client *graph.Client, indent stri
 	return exportPartCmd
 }
 
+// ExportPartId() gets the part based on part id
 func ExportPartId(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportPartIdCmd := &cobra.Command{
-		Use:   "id",
+		Use:   "id [part id] [-o] [export path]",
 		Short: "Export a part using part id",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
@@ -57,22 +71,21 @@ func ExportPartId(configFile *config.ConfigData, client *graph.Client, indent st
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argExportPath, _ := cmd.Flags().GetString("output")
 			if argExportPath == "" {
 				return errors.New("Output path for exporting is not provided")
 			}
 			argPartID := args[0]
 			if argPartID != "" {
-				log.Debug().Str("ID", argPartID).Msg("retrieving part by id")
+				slog.Debug("retrieving part by id", slog.String("ID", argPartID))
 				part, err := graphql.GetPartByID(context.Background(), client, argPartID)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error retrieving part")
+					return errors.Wrapf(err, "error retrieving part")
 				}
-				ExportHelper(part, argExportPath)
+				err = ExportHelper(part, argExportPath)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		},
@@ -81,9 +94,10 @@ func ExportPartId(configFile *config.ConfigData, client *graph.Client, indent st
 	return exportPartIdCmd
 }
 
+// ExportPartSha() gets the part based on part sha256
 func ExportPartSha(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportPartShaCmd := &cobra.Command{
-		Use:   "sha256",
+		Use:   "sha256 [sha256] [-o] [export path]",
 		Short: "Export a part using the Sha256",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
@@ -92,22 +106,21 @@ func ExportPartSha(configFile *config.ConfigData, client *graph.Client, indent s
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argExportPath, _ := cmd.Flags().GetString("output")
 			if argExportPath == "" {
 				return errors.New("Output path for exporting is not provided")
 			}
 			argSHA256 := args[0]
 			if argSHA256 != "" {
-				log.Debug().Str("SHA256", argSHA256).Msg("retrieving part by sha256")
+				slog.Debug("retrieving part by sha256", slog.String("SHA256", argSHA256))
 				part, err := graphql.GetPartBySHA256(context.Background(), client, argSHA256)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error retrieving part")
+					return errors.Wrapf(err, "error retrieving part")
 				}
-				ExportHelper(part, argExportPath)
+				err = ExportHelper(part, argExportPath)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil
@@ -116,9 +129,10 @@ func ExportPartSha(configFile *config.ConfigData, client *graph.Client, indent s
 	return exportPartShaCmd
 }
 
+// ExportPartFvc() gets the part based on part file verification code
 func ExportPartFvc(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportPartFvcCmd := &cobra.Command{
-		Use:   "fvc",
+		Use:   "fvc [fvc] [-o] [export path]",
 		Short: "Export a part using fvc",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
@@ -127,22 +141,21 @@ func ExportPartFvc(configFile *config.ConfigData, client *graph.Client, indent s
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argExportPath, _ := cmd.Flags().GetString("output")
 			if argExportPath == "" {
 				return errors.New("Output path for exporting is not provided")
 			}
 			argFVC := args[0]
 			if argFVC != "" {
-				log.Debug().Str("File Verification Code", argFVC).Msg("retrieving part by file verification code")
+				slog.Debug("retrieving part by file verification code", slog.String("File Verification Code", argFVC))
 				part, err := graphql.GetPartByFVC(context.Background(), client, argFVC)
 				if err != nil {
-					log.Fatal().Err(err).Msg("error retrieving part")
+					return errors.Wrapf(err, "error retrieving part")
 				}
-				ExportHelper(part, argExportPath)
+				err = ExportHelper(part, argExportPath)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		},
@@ -150,9 +163,11 @@ func ExportPartFvc(configFile *config.ConfigData, client *graph.Client, indent s
 	return exportPartFvcCmd
 }
 
+// ExportTemplate() handles getting out a template for various part/profile
+// data into a file on the given path
 func ExportTemplate(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportTemplateCmd := &cobra.Command{
-		Use:   "template",
+		Use:   "template [-o] [export path]",
 		Short: "Export a template to a given file",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return errors.New("Please provide a the find parameter. For more info run help")
@@ -166,15 +181,12 @@ func ExportTemplate(configFile *config.ConfigData, client *graph.Client, indent 
 	return exportTemplateCmd
 }
 
+// ExportTemplatePart() handles the template for a part
 func ExportTemplatePart(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportTemplatePartCmd := &cobra.Command{
-		Use:   "part",
+		Use:   "part [-o] [export path]",
 		Short: "Export a part template",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argExportPath, _ := cmd.Flags().GetString("output")
 			if argExportPath == "" {
 				return errors.New("Output path for exporting is not provided")
@@ -183,16 +195,16 @@ func ExportTemplatePart(configFile *config.ConfigData, client *graph.Client, ind
 			yamlPart.Format = 1.0
 			f, err := os.Create(argExportPath)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error creating template file")
+				return errors.Wrapf(err, "error creating template file")
 			}
 			defer f.Close()
 			yamlPartTemplate, err := yaml.Marshal(&yamlPart)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error marshaling part template")
+				return errors.Wrapf(err, "error marshaling part template")
 			}
 			_, err = f.Write(yamlPartTemplate)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error writing template to file")
+				return errors.Wrapf(err, "error writing template to file")
 			}
 			fmt.Printf("Part template successfully output to: %s\n", argExportPath)
 			return nil
@@ -201,15 +213,12 @@ func ExportTemplatePart(configFile *config.ConfigData, client *graph.Client, ind
 	return exportTemplatePartCmd
 }
 
+// ExportTemplateSecurity() handles the template for a security profile
 func ExportTemplateSecurity(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportTemplateSecurityCmd := &cobra.Command{
-		Use:   "security",
+		Use:   "security [-o] [export path]",
 		Short: "Export a security template",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argExportPath, _ := cmd.Flags().GetString("output")
 			if argExportPath == "" {
 				return errors.New("Output path for exporting is not provided")
@@ -221,24 +230,24 @@ func ExportTemplateSecurity(configFile *config.ConfigData, client *graph.Client,
 			yamlSecurityProfile.CVEList = append(yamlSecurityProfile.CVEList, *yamlCVE)
 			f, err := os.Create(argExportPath)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error creating template file")
+				return errors.Wrapf(err, "error creating template file")
 			}
 			defer f.Close()
 			yamlProfileTemplate, err := yaml.Marshal(&yamlProfile)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error marshaling profile template")
+				return errors.Wrapf(err, "error marshaling profile template")
 			}
 			yamlSecurityProfileTemplate, err := yaml.Marshal(&yamlSecurityProfile)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error marshaling security profile template")
+				return errors.Wrapf(err, "error marshaling security profile template")
 			}
 			_, err = f.Write(yamlProfileTemplate)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error writing template to file")
+				return errors.Wrapf(err, "error writing template to file")
 			}
 			_, err = f.Write(yamlSecurityProfileTemplate)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error writing template to file")
+				return errors.Wrapf(err, "error writing template to file")
 			}
 			fmt.Printf("Profile template successfully output to: %s\n", argExportPath)
 			return nil
@@ -247,15 +256,12 @@ func ExportTemplateSecurity(configFile *config.ConfigData, client *graph.Client,
 	return exportTemplateSecurityCmd
 }
 
+// ExportTemplateQuality() handles the template for a quality profile
 func ExportTemplateQuality(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportTemplateQualityCmd := &cobra.Command{
-		Use:   "quality",
+		Use:   "quality [-o] [export path]",
 		Short: "Export a quality template",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argExportPath, _ := cmd.Flags().GetString("output")
 			if argExportPath == "" {
 				return errors.New("Output path for exporting is not provided")
@@ -267,24 +273,24 @@ func ExportTemplateQuality(configFile *config.ConfigData, client *graph.Client, 
 			yamlQualityProfile.BugList = append(yamlQualityProfile.BugList, *yamlBug)
 			f, err := os.Create(argExportPath)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error creating template file")
+				return errors.Wrapf(err, "error creating template file")
 			}
 			defer f.Close()
 			yamlProfileTemplate, err := yaml.Marshal(&yamlProfile)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error marshaling profile template")
+				return errors.Wrapf(err, "error marshaling profile template")
 			}
 			yamlQualityProfileTemplate, err := yaml.Marshal(&yamlQualityProfile)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error marshaling quality profile template")
+				return errors.Wrapf(err, "error marshaling quality profile template")
 			}
 			_, err = f.Write(yamlProfileTemplate)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error writing template to file")
+				return errors.Wrapf(err, "error writing template to file")
 			}
 			_, err = f.Write(yamlQualityProfileTemplate)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error writing template to file")
+				return errors.Wrapf(err, "error writing template to file")
 			}
 			fmt.Printf("Profile template successfully output to: %s\n", argExportPath)
 			return nil
@@ -293,15 +299,12 @@ func ExportTemplateQuality(configFile *config.ConfigData, client *graph.Client, 
 	return exportTemplateQualityCmd
 }
 
+// ExportTemplateLicense() handles the template for a license profile
 func ExportTemplateLicense(configFile *config.ConfigData, client *graph.Client, indent string) *cobra.Command {
 	exportTemplateLicenseCmd := &cobra.Command{
-		Use:   "license",
+		Use:   "license [-o] [export path]",
 		Short: "Export a license template",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argVerboseMode, _ := cmd.Flags().GetBool("verbose")
-			if argVerboseMode {
-				zerolog.SetGlobalLevel(0)
-			}
 			argExportPath, _ := cmd.Flags().GetString("output")
 			if argExportPath == "" {
 				return errors.New("Output path for exporting is not provided")
@@ -313,24 +316,24 @@ func ExportTemplateLicense(configFile *config.ConfigData, client *graph.Client, 
 			yamlLicensingProfile.LicenseAnalysis = append(yamlLicensingProfile.LicenseAnalysis, *yamlLicense)
 			f, err := os.Create(argExportPath)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error creating template file")
+				return errors.Wrapf(err, "error creating template file")
 			}
 			defer f.Close()
 			yamlProfileTemplate, err := yaml.Marshal(&yamlProfile)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error marshaling profile template")
+				return errors.Wrapf(err, "error marshaling profile template")
 			}
 			yamlLicensingProfileTemplate, err := yaml.Marshal(&yamlLicensingProfile)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error marshaling licensing profile template")
+				return errors.Wrapf(err, "error marshaling licensing profile template")
 			}
 			_, err = f.Write(yamlProfileTemplate)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error writing template to file")
+				return errors.Wrapf(err, "error writing template to file")
 			}
 			_, err = f.Write(yamlLicensingProfileTemplate)
 			if err != nil {
-				log.Fatal().Err(err).Msg("error writing template to file")
+				return errors.Wrapf(err, "error writing template to file")
 			}
 			fmt.Printf("Profile template successfully output to: %s\n", argExportPath)
 			return nil
@@ -339,26 +342,29 @@ func ExportTemplateLicense(configFile *config.ConfigData, client *graph.Client, 
 	return exportTemplateLicenseCmd
 }
 
-func ExportHelper(part *graphql.Part, argExportPath string) {
+// ExportHelper() is a helper function for storing the data
+// into a file on a given path.
+func ExportHelper(part *graphql.Part, argExportPath string) error {
 	var yamlPart yaml.Part
 	if err := graphql.UnmarshalPart(part, &yamlPart); err != nil {
-		log.Fatal().Err(err).Msg("error parsing part into yaml")
+		return errors.Wrapf(err, "error parsing part into yaml")
 	}
 
 	ret, err := yaml.Marshal(yamlPart)
 	if err != nil {
-		log.Fatal().Err(err).Msg("error marshalling yaml")
+		return errors.Wrapf(err, "error marshalling yaml")
 	}
 
 	yamlFile, err := os.Create(argExportPath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("error creating yaml file")
+		return errors.Wrapf(err, "error creating yaml file")
 	}
 	defer yamlFile.Close()
 
 	_, err = yamlFile.Write(ret)
 	if err != nil {
-		log.Fatal().Err(err).Msg("error writing part to yaml file")
+		return errors.Wrapf(err, "error writing part to yaml file")
 	}
 	fmt.Printf("Part successfully exported to path: %s\n", argExportPath)
+	return nil
 }
