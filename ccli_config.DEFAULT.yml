@@ -3,11 +3,13 @@
 ##
 ## catalog address
 server_addr: "http://localhost/api/graphql"
-server_port: 80
 ##
 ## logging
+## there are 2 log levels:
+## 1 - debugger
+## 2 - debugger with source data
 log_file: 'log.txt'
-log_level: 2
+log_level: 1
 ##
 ##
 ## How much to indent the json format of an output file.

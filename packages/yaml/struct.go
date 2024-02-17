@@ -1,5 +1,17 @@
+// Copyright (c) 2020 Wind River Systems, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software  distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+// OR CONDITIONS OF ANY KIND, either express or implied.
 package yaml
 
+// struct for storing part data
 type Part struct {
 	Format      float64 `yaml:"format"`
 	FVC         string  `yaml:"fvc"`
@@ -8,6 +20,7 @@ type Part struct {
 	Name        string  `yaml:"name"`
 	Version     string  `yaml:"version"`
 	Type        string  `yaml:"type"`
+	ContentType string  `yaml:"content_type"`
 	FamilyName  string  `yaml:"family_name"`
 	Label       string  `yaml:"label"`
 	Description string  `yaml:"description"`
@@ -22,6 +35,7 @@ type Part struct {
 	CompositeList []string `yaml:"composite_list"`
 }
 
+// struct for storing profile data
 type Profile struct {
 	Profile   string  `yaml:"profile"`
 	Format    float64 `yaml:"format"`

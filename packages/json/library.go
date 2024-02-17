@@ -1,3 +1,15 @@
+// Copyright (c) 2020 Wind River Systems, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software  distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+// OR CONDITIONS OF ANY KIND, either express or implied.
+
 // Json wrapper package implements ccli json data structures and provides standard library functionality
 package json
 
@@ -7,14 +19,17 @@ import (
 
 type RawMessage json.RawMessage
 
+// Marshal() gives the json encoding of the data
 func Marshal(v any) ([]byte, error) {
 	return json.Marshal(v)
 }
 
+// Unmarshal() parses the json encoded data
 func Unmarshal(data []byte, v any) error {
 	return json.Unmarshal(data, v)
 }
 
+// MarshalIndent() also gives the json encoding of the data in indented format
 func MarshalIndent(v any, prefix string, indent string) ([]byte, error) {
 	return json.MarshalIndent(v, prefix, indent)
 }

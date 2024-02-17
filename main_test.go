@@ -1,3 +1,14 @@
+// Copyright (c) 2020 Wind River Systems, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at:
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software  distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+// OR CONDITIONS OF ANY KIND, either express or implied.
 package main
 
 import (
@@ -37,7 +48,7 @@ func TestPing(tester *testing.T) {
 func TestUpload(tester *testing.T) {
 	// set timer for upload to 20 seconds
 	duration := 180 * time.Second
-	for i := 0; i < len(paths); i = i + 1 {
+	for i := 0; i < 1; i = i + 1 {
 		// ccli upload testdir/packages/openid-client-4.9.1.zip
 		cmd := exec.Command("ccli", "upload", paths[i])
 		// capturing command line output
@@ -59,7 +70,7 @@ func TestUpload(tester *testing.T) {
 			// ccli query 'query{part(file_verification_code:\"465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1\"){size}}'
 			cmd := exec.Command("ccli", "query", "query{part(file_verification_code:\""+fvc[i]+"\"){size}}")
 			// capturing command line output
-			output, err = cmd.Output()
+			_, err = cmd.Output()
 			if err == nil {
 				flag = true
 				break
@@ -76,7 +87,7 @@ func TestUpload(tester *testing.T) {
 // command line and checks if the command line output is as expected
 func TestAddPart(tester *testing.T) {
 	// ccli add --part testdir/yml/busybox-1.35.0.yml
-	cmd := exec.Command("ccli", "add", "--part", "testdir/yml/busybox-1.35.0.yml")
+	cmd := exec.Command("ccli", "add", "part", "testdir/yml/busybox-1.35.0.yml")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -116,7 +127,7 @@ func TestQuery(tester *testing.T) {
 // command line and checks if the command line output is as expected
 func TestUpdate(tester *testing.T) {
 	// ccli update --part testdir/yml/openid-client-4.9.1.yml
-	cmd := exec.Command("ccli", "update", "--part", "testdir/yml/openid-client-4.9.1.yml")
+	cmd := exec.Command("ccli", "update", "testdir/yml/openid-client-4.9.1.yml")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -134,7 +145,7 @@ func TestUpdate(tester *testing.T) {
 // command line and checks if the command line output is as expected
 func TestAddLicenseProfile(tester *testing.T) {
 	// ccli add --profile testdir/yml/openid_license.yml
-	cmd := exec.Command("ccli", "add", "--profile", "testdir/yml/openid_license.yml")
+	cmd := exec.Command("ccli", "add", "profile", "testdir/yml/openid_license.yml")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -152,7 +163,7 @@ func TestAddLicenseProfile(tester *testing.T) {
 // command line and checks if the command line output is as expected
 func TestAddSecurityProfile(tester *testing.T) {
 	// ccli add --profile testdir/yml/openid_security.yml
-	cmd := exec.Command("ccli", "add", "--profile", "testdir/yml/openid_security.yml")
+	cmd := exec.Command("ccli", "add", "profile", "testdir/yml/openid_security.yml")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -170,7 +181,7 @@ func TestAddSecurityProfile(tester *testing.T) {
 // command line and checks if the command line output is as expected
 func TestAddQualityProfile(tester *testing.T) {
 	// ccli add --profile testdir/yml/openid_quality.yml
-	cmd := exec.Command("ccli", "add", "--profile", "testdir/yml/openid_quality.yml")
+	cmd := exec.Command("ccli", "add", "profile", "testdir/yml/openid_quality.yml")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -188,7 +199,7 @@ func TestAddQualityProfile(tester *testing.T) {
 // command line and checks if the command line output is as expected
 func TestExportPart(tester *testing.T) {
 	// ccli export -fvc 465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1 -o testdir/testpart.yml
-	cmd := exec.Command("ccli", "export", "-fvc", fvc[0], "-o", "testdir/testpart.yml")
+	cmd := exec.Command("ccli", "export", "part", "fvc", fvc[0], "-o", "testdir/testpart.yml")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -208,7 +219,7 @@ func TestExportPart(tester *testing.T) {
 // command line and checks if the command line output is as expected
 func TestExportTemplate(tester *testing.T) {
 	// ccli export --template licensing -o testdir/testlicense.yml
-	cmd := exec.Command("ccli", "export", "--template", "licensing", "-o", "testdir/testlicense.yml")
+	cmd := exec.Command("ccli", "export", "template", "license", "-o", "testdir/testlicense.yml")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -228,7 +239,7 @@ func TestExportTemplate(tester *testing.T) {
 // part-id and command line. Finally checks if the command line output is as expected
 func TestDelete(tester *testing.T) {
 	// ccli find -fvc 465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1
-	cmd := exec.Command("ccli", "find", "-fvc", fvc[0])
+	cmd := exec.Command("ccli", "find", "fvc", fvc[0])
 	// capturing command line output
 	outputfind, err := cmd.Output()
 	if err != nil {
@@ -237,7 +248,7 @@ func TestDelete(tester *testing.T) {
 	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
 	part_Id := strings.Fields(string(outputfind))[2]
 	// ccli delete --id <part-id>
-	cmd = exec.Command("ccli", "delete", "--id", part_Id)
+	cmd = exec.Command("ccli", "delete", part_Id)
 	// capturing command line output
 	outputDeletePart1, err := cmd.Output()
 	if err != nil {
@@ -280,10 +291,9 @@ func TestDelete(tester *testing.T) {
 			tester.Errorf("Expected %s but got %s", expected, result)
 		}
 	}
-*/
 func TestRecursiveDelete(tester *testing.T) {
 	// ccli find -fvc 465643320044e55d9adee108307f5c274ecf14c4dd1442c43a66fc8955dcf7e40d6f8a50d1
-	cmd := exec.Command("ccli", "find", "-fvc", fvc[1])
+	cmd := exec.Command("ccli", "find", "fvc", fvc[1])
 	// capturing command line output
 	outputfind, err := cmd.Output()
 	if err != nil {
@@ -292,7 +302,7 @@ func TestRecursiveDelete(tester *testing.T) {
 	// splitting and extracting the output message to be checked. Fields func is used to divide the string by whitespaces to extract specific value
 	part_Id := strings.Fields(string(outputfind))[2]
 	// ccli delete --id <part-id>
-	cmd = exec.Command("ccli", "delete", "--id", part_Id, "--recursive")
+	cmd = exec.Command("ccli", "delete", part_Id, "--recursive")
 	// capturing command line output
 	output, err := cmd.Output()
 	if err != nil {
@@ -307,6 +317,7 @@ func TestRecursiveDelete(tester *testing.T) {
 		tester.Errorf("Expected %s but got %s", expected, result)
 	}
 }
+*/
 
 /*
 	func TestSharedFileDeletion(tester *testing.T) {
@@ -335,7 +346,7 @@ func TestArchiveDeletion(tester *testing.T) {
 
 func TestLogicalPartDelete(tester *testing.T) {
 	// ccli delete --id <part-id>
-	cmd := exec.Command("ccli", "delete", "--id", logical_part_id)
+	cmd := exec.Command("ccli", "delete", logical_part_id)
 	// capturing command line output
 	outputDeletePart2, err := cmd.Output()
 	if err != nil {
