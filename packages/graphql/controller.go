@@ -336,6 +336,9 @@ func UpdatePart(ctx context.Context, client *graphql.Client, partData *yaml.Part
 	if partData.FamilyName != "" {
 		partInput.FamilyName = partData.FamilyName
 	}
+	if partData.ContentType != "" {
+		partInput.ContentType = partData.ContentType
+	}
 	if partData.Type != "" {
 		partInput.Type = partData.Type
 	}
