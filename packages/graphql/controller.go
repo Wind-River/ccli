@@ -394,6 +394,72 @@ func UpdatePart(ctx context.Context, client *graphql.Client, partData *yaml.Part
 	return &mutation.Part, nil
 }
 
+// Sets the fields of a part record including emptry values from the catalog using yaml template
+func SetPart(ctx context.Context, client *graphql.Client, partData *yaml.Part) (*Part, error) {
+
+	var partInput PartInput
+	if partData.CatalogID == "" {
+		if partData.FVC == "" && partData.Sha256 == "" {
+			return nil, errors.New("error updating part, no part identifier provided")
+		}
+		if partData.FVC != "" {
+			catalogID, err := GetPartIDByFVC(ctx, client, partData.FVC)
+			if err != nil {
+				return nil, err
+			}
+			if catalogID != nil {
+				partInputID := UUID(catalogID.String())
+				partInput.ID = &partInputID
+			}
+		} else if partData.Sha256 != "" {
+			catalogID, err := GetPartIDBySha256(ctx, client, partData.Sha256)
+			if err != nil {
+				return nil, err
+			}
+			if catalogID != nil {
+				partInputID := UUID(catalogID.String())
+				partInput.ID = &partInputID
+			}
+		}
+	}
+
+	if partData.ComprisedOf != "" {
+		comprisedID := UUID(partData.ComprisedOf)
+		partInput.Comprised = &comprisedID
+	}
+
+	var mutation struct {
+		Part `graphql:"setPart(partInput: $partInput)"`
+	}
+
+	variables := map[string]interface{}{
+		"partInput": partInput,
+	}
+
+	if err := client.Mutate(ctx, &mutation, variables); err != nil {
+		return nil, err
+	}
+
+	if partData.Aliases != nil {
+		var aliasMutation struct {
+			UUID `graphql:"createAlias(id: $id, alias: $alias)"`
+		}
+
+		for _, v := range partData.Aliases {
+			aliasVariables := map[string]interface{}{
+				"id":    *partInput.ID,
+				"alias": v,
+			}
+
+			if err := client.Mutate(ctx, &aliasMutation, aliasVariables); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return &mutation.Part, nil
+}
+
 // Used to convert a part data structure into the structure expected by yaml i/o
 func UnmarshalPart(part *Part, yamlPart *yaml.Part) error {
 	yamlPart.Format = 1.0

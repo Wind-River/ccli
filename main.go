@@ -37,14 +37,12 @@ func init() {
 	viper.AddConfigPath(".")
 	// read the config file
 	if err := viper.ReadInConfig(); err != nil {
-		if err != nil {
-			if err != errors.New("open ccli_config.yml: no such file or directory") {
-				fmt.Println("User configuration file not found. Please create ccli_config.yml and copy the contents of ccli_config.DEFAULT.yml.")
-			} else {
-				fmt.Println("Error reading in config file. Error:", err)
-			}
-			os.Exit(1)
+		if err != errors.New("open ccli_config.yml: no such file or directory") {
+			fmt.Println("User configuration file not found. Please create ccli_config.yml and copy the contents of ccli_config.DEFAULT.yml.")
+		} else {
+			fmt.Println("Error reading in config file. Error:", err)
 		}
+		os.Exit(1)
 	}
 	// unmarshal the config file parameters to a struct
 	if err := viper.Unmarshal(&configFile); err != nil {
@@ -110,6 +108,7 @@ func main() {
 	rootCmd.AddCommand(cmd.Ping(&configFile))
 	rootCmd.AddCommand(cmd.Upload(&configFile))
 	rootCmd.AddCommand(cmd.Update(&configFile, client, indent))
+	rootCmd.AddCommand(cmd.Set(&configFile, client, indent))
 	rootCmd.AddCommand(cmd.Query(&configFile, client, indent))
 	rootCmd.AddCommand(cmd.Find(&configFile, client, indent))
 	rootCmd.AddCommand(cmd.Export(&configFile, client, indent))

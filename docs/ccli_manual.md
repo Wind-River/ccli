@@ -33,6 +33,10 @@ required yml file. For example:
 ```
 $ ccli update openssl-1.1.1n.v4.yml
 ```
+- **set** <file.yml> - sets the fields of a part record including empty values.
+```
+$ ccli set openssl-1.1.1n.v4.yml
+```
 -  **upload** <source archive> - uploads the specified source archive. A a new part record will be created if it does not correspond part record exists otherwise
 it will be associated with an existing part if it already exists.  
 ```
