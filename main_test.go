@@ -141,6 +141,24 @@ func TestUpdate(tester *testing.T) {
 	}
 }
 
+// TestSet sets a part's information based on the yml file present in the given path using the
+// command line and checks if the command line output is as expected
+func TestSet(tester *testing.T) {
+	// ccli set testdir/yml/openid-client-4.9.1.yml
+	cmd := exec.Command("ccli", "set", "testdir/yml/openid-client-4.9.1.yml")
+	// capturing command line output
+	output, err := cmd.Output()
+	if err != nil {
+		tester.Error("failed to capture command line output", err)
+	}
+	// splitting and extracting the output message to be checked
+	result := strings.Split(string(output), "\n")[0]
+	expected := "Part fields successfully set"
+	if result != expected {
+		tester.Errorf("Expected %s but got %s", expected, result)
+	}
+}
+
 // TestAddLicenseProfile adds a part's licensing profile based on the yml file present in the given path using the
 // command line and checks if the command line output is as expected
 func TestAddLicenseProfile(tester *testing.T) {
