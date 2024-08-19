@@ -219,4 +219,67 @@ bug_list:
       - "[Busybox Bug Report](https://bugs.busybox.net/show_bug.cgi?id=14536)"
 ```
 
+## CCLI Example Usage
+```
+$ ccli examples
+    $ ccli add part openssl-1.1.1n.yml
+    $ ccli add profile profile_openssl-1.1.1n.yml
+    $ ccli query "{part(id:\"aR25sd-V8dDvs2-p3Gfae\"){file_verification_code}}"
+    $ ccli export part id sdl3ga-naTs42g5-rbow2A -o file.yml
+    $ ccli export template security -o file.yml
+    $ ccli update openssl-1.1.1n.v4.yml
+    $ ccli upload openssl-1.1.1n.tar.gz
+    $ ccli find part busybox
+    $ ccli find sha256 2493347f59c03...
+    $ ccli find profile security werS12-da54FaSff-9U2aef
+    $ ccli delete adjb23-A4D3faTa-d95Xufs
+    $ ccli ping
+```
+
+## Updating License Example
+### Steps:
+**(1) Export out main profile:**
+```
+$ ccli export part sha256 12cec6bd2b16d8a9446dd16130f2b92982f1819f6e1c5f5887b6db03f5660d28 -o busybox-33.yml
+Part successfully exported to path: busybox-33.yml
+```
+Two ways to obtain the sha256:
+  - use the linux coomand: sha256sum busybox-33.1.tar.gz
+  - look up the part in the catalog and copy the sha256 from one of the archives  listed.
+    
+**(2) Edit file: busybox-33.yml and change the license to GPL-2.0:**
+```
+license:
+    license_expression: ""
+    analysis_type: ""
+```
+To:
+```
+license:
+    license_expression: "GPL-2.0"
+    analysis_type: "human-analysis/mark.gisi@windriver.com"
+```
+**(3) Perform an update:**
+```
+ccli $ ccli update busybox-33.yml
+
+Part successfully updated
+{
+  "ID": "858f8261-19dc-441a-9cfb-5fe2e38345ac",
+  "PartType": "/archive",
+  "ContentType": "tbd",
+  "Version": "1.33.1",
+  "Name": "busybox",
+  "Label": "busybox-1.33.1",
+  "FamilyName": "",
+  "FileVerificationCode": "465643320019459ec42edd3ba8723fe40f261c4489c7ed497888777b8396f406dcaa588157",
+  "Size": 9925270,
+  "License": "GPL-2.0",
+  "LicenseRationale": "human-analysis/mark.gisi@windriver.com",
+  "Description": "",
+  "HomePage": "",
+  "Comprised": "00000000-0000-0000-0000-000000000000",
+  "Aliases": []
+}
+```
 
