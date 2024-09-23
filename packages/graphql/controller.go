@@ -271,8 +271,11 @@ func Query(ctx context.Context, client *graphql.Client, query string) ([]byte, e
 
 // uploads an archive to the catalog using graphql-upload library
 func UploadFile(httpClient *http.Client, uri string, path string, name string) (*graphqlUpload.Response, error) {
-	f, _ := os.Open(path)
-	response, _ := graphqlUpload.Upload(
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	response, err := graphqlUpload.Upload(
 		http.DefaultClient,
 		uri,
 		`
@@ -292,6 +295,9 @@ func UploadFile(httpClient *http.Client, uri string, path string, name string) (
 			Data:     f,
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 	return response, nil
 }
 
