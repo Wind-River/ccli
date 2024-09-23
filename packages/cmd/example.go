@@ -34,6 +34,7 @@ func Example() *cobra.Command {
 	$ ccli export part id sdl3ga-naTs42g5-rbow2A -o file.yml
 	$ ccli export template security -o file.yml
 	$ ccli update openssl-1.1.1n.v4.yml
+	$ ccli set openssl-1.1.1n.v4.yml
 	$ ccli upload openssl-1.1.1n.tar.gz
 	$ ccli find part busybox
 	$ ccli find sha256 2493347f59c03...
