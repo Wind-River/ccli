@@ -17,7 +17,9 @@ import (
 	"log/slog"
 	"wrs/catalog/ccli/packages/config"
 	"wrs/catalog/ccli/packages/graphql"
+	"wrs/catalog/ccli/packages/pulsar"
 
+	pb "bitbucket.wrs.com/scm/weststar/pulsar-schemas-go.git"
 	graph "github.com/hasura/go-graphql-client"
 
 	"github.com/pkg/errors"
@@ -54,6 +56,13 @@ func Delete(configFile *config.ConfigData, client *graph.Client, indent string) 
 				slog.Debug("deleting part", slog.String("ID", argPartID))
 				if err := graphql.DeletePart(context.Background(), client, argPartID, argRecursiveMode, argForcedMode); err != nil {
 					return errors.Wrapf(err, "error deleting part from catalog")
+				}
+				pulsarProducer, err := pulsar.NewPulsarPartProducer(nil, configFile.BusHost, "persistent://public/proto/part")
+				if err != nil {
+					return err
+				}
+				if err := pulsarProducer.SendPartSchemaValue(pb.PartAction_DELETE, argPartID); err != nil {
+					return errors.Wrapf(err, "error announcing part deletion")
 				}
 				fmt.Printf("Successfully deleted id: %s from catalog\n", argPartID)
 			}

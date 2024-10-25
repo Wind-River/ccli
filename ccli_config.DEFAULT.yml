@@ -4,6 +4,8 @@
 ## catalog address
 server_addr: "http://localhost/api/graphql"
 ##
+## commbus host
+bus_host: "localhost"
 ## logging
 ## there are 2 log levels:
 ## 1 - debugger
