@@ -27,6 +27,8 @@ template <part | security | quality | licensing> -o <Path.yaml>
 Export template for part or profile
 ```
 ccli export template security -o file.yml
+
+ccli export template license -o file.yml
 ```
 - **update** <file.yml> - enables one to update selective data fields of a part record. See the 'update' section below for the format the 
 required yml file. For example:
