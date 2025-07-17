@@ -39,6 +39,7 @@ func Example() *cobra.Command {
 	$ ccli find sha256 2493347f59c03...
 	$ ccli find profile security werS12-da54FaSff-9U2aef
 	$ ccli delete adjb23-A4D3faTa-d95Xufs
+	$ ccli delete 2fc0765bc9e93badca9b396522983eec8b6be233a446b285b7c319644f9a2ee4
 	$ ccli ping`
 			fmt.Printf("%s\n", exampleString)
 			return nil
