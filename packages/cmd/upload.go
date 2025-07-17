@@ -50,8 +50,13 @@ func Upload(configFile *config.ConfigData) *cobra.Command {
 					return errors.Wrapf(err, "error uploading archive")
 				}
 				// check if the response is present
-				if response.Data != nil {
-					fmt.Printf("Successfully uploaded package: %s\n", argPath)
+				if response != nil {
+					if len(response.Errors) > 0 {
+						return errors.New(fmt.Sprintf("error uploading archive: %v", response.Errors))
+					}
+					if response.Data != nil {
+						fmt.Printf("Successfully uploaded package: %s\n", argPath)
+					}
 				}
 			}
 			return nil
