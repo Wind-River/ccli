@@ -55,9 +55,10 @@ profile <security|quality|licensing> <catalog_id> - retrieves a profile from the
 ccli find profile security werS12-da54FaSff-9U2aef
 ```
 - **delete**
- <catalog_id> - deletes a part from the catalog using part id if the part has no related parts. Recursive flag can be used to delete a part and its sub-parts as long as they have no other related parts.
+ <catalog_id|sha256> - deletes a part from the catalog using part id or sha256 if the part has no related parts. Recursive flag can be used to delete a part and its sub-parts as long as they have no other related parts.
 ```
 ccli delete adjb23-A4D3faTa-d95Xufs
+ccli delete 2fc0765bc9e93badca9b396522983eec8b6be233a446b285b7c319644f9a2ee4
 ```
 ```
 ccli delete adjb23-A4D3faTa-d95Xufs --recursive
