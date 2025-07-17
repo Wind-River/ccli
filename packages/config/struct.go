@@ -25,6 +25,7 @@ type ConfigData struct {
 	LogFile    string `mapstructure:"log_file"`
 	LogLevel   int64  `mapstructure:"log_level"`
 	JsonIndent int64  `mapstructure:"json_indent"`
+	BusHost    string `mapstructure:"bus_host"`
 }
 
 // struct for storing io.writer

@@ -39,7 +39,7 @@ type Archive struct {
 type Part struct {
 	ID                   uuid.UUID `graphql:"id" yaml:"id"`
 	PartType             string    `graphql:"type" yaml:"type"`
-	ContentType          string    `graphql:"type" yaml:"content_type"`
+	ContentType          string    `graphql:"content_type" yaml:"content_type"`
 	Version              string    `graphql:"version" yaml:"version"`
 	Name                 string    `graphql:"name" yaml:"name"`
 	Label                string    `graphql:"label" yaml:"label"`

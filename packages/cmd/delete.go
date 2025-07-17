@@ -13,11 +13,14 @@ package cmd
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"wrs/catalog/ccli/packages/config"
 	"wrs/catalog/ccli/packages/graphql"
+	"wrs/catalog/ccli/packages/pulsar"
 
+	pb "bitbucket.wrs.com/scm/weststar/pulsar-schemas-go.git"
 	graph "github.com/hasura/go-graphql-client"
 
 	"github.com/pkg/errors"
@@ -47,13 +50,30 @@ func Delete(configFile *config.ConfigData, client *graph.Client, indent string) 
 			// check if the part id is provided as an argument
 			argPartID := args[0]
 			if argPartID == "" {
-				return errors.New("error deleting part, delete subcommand usage: ./ccli delete <catalog_id>")
+				return errors.New("error deleting part, delete subcommand usage: ./ccli delete <catalog_id|sha256>")
 			}
 			// delete the part if the part id is present
 			if argPartID != "" {
+				if len(argPartID) == 64 {
+					if _, err := hex.DecodeString(argPartID); err != nil {
+						return errors.Wrapf(err, "error decoding sha256 value")
+					}
+					part, err := graphql.GetPartBySHA256(context.Background(), client, argPartID)
+					if err != nil {
+						return errors.Wrapf(err, "error retrieving part by sha256")
+					}
+					argPartID = part.ID.String()
+				}
 				slog.Debug("deleting part", slog.String("ID", argPartID))
 				if err := graphql.DeletePart(context.Background(), client, argPartID, argRecursiveMode, argForcedMode); err != nil {
 					return errors.Wrapf(err, "error deleting part from catalog")
+				}
+				pulsarProducer, err := pulsar.NewPulsarPartProducer(nil, configFile.BusHost, "persistent://public/proto/part")
+				if err != nil {
+					return err
+				}
+				if err := pulsarProducer.SendPartSchemaValue(pb.PartAction_DELETE, argPartID); err != nil {
+					return errors.Wrapf(err, "error announcing part deletion")
 				}
 				fmt.Printf("Successfully deleted id: %s from catalog\n", argPartID)
 			}
