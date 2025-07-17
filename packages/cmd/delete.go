@@ -13,6 +13,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"wrs/catalog/ccli/packages/config"
@@ -49,10 +50,20 @@ func Delete(configFile *config.ConfigData, client *graph.Client, indent string) 
 			// check if the part id is provided as an argument
 			argPartID := args[0]
 			if argPartID == "" {
-				return errors.New("error deleting part, delete subcommand usage: ./ccli delete <catalog_id>")
+				return errors.New("error deleting part, delete subcommand usage: ./ccli delete <catalog_id|sha256>")
 			}
 			// delete the part if the part id is present
 			if argPartID != "" {
+				if len(argPartID) == 64 {
+					if _, err := hex.DecodeString(argPartID); err != nil {
+						return errors.Wrapf(err, "error decoding sha256 value")
+					}
+					part, err := graphql.GetPartBySHA256(context.Background(), client, argPartID)
+					if err != nil {
+						return errors.Wrapf(err, "error retrieving part by sha256")
+					}
+					argPartID = part.ID.String()
+				}
 				slog.Debug("deleting part", slog.String("ID", argPartID))
 				if err := graphql.DeletePart(context.Background(), client, argPartID, argRecursiveMode, argForcedMode); err != nil {
 					return errors.Wrapf(err, "error deleting part from catalog")
