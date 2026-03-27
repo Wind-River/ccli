@@ -108,6 +108,7 @@ func main() {
 	rootCmd.AddCommand(cmd.Ping(&configFile))
 	rootCmd.AddCommand(cmd.Upload(&configFile))
 	rootCmd.AddCommand(cmd.Update(&configFile, client, indent))
+	rootCmd.AddCommand(cmd.Set(&configFile, client, indent))
 	rootCmd.AddCommand(cmd.Query(&configFile, client, indent))
 	rootCmd.AddCommand(cmd.Find(&configFile, client, indent))
 	rootCmd.AddCommand(cmd.Export(&configFile, client, indent))
